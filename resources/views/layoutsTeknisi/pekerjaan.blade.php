@@ -57,9 +57,7 @@
         <div class="card-body">
 
             <form
-                action="{{ route('teknisi.pekerjaan.store') }}"
-                method="POST"
-                enctype="multipart/form-data">
+                action="{{ route('teknisi.pekerjaan.store') }}" method="POST" enctype="multipart/form-data">
 
                 @csrf
 
@@ -67,21 +65,29 @@
 
                     <div class="col-lg-6">
 
-                        <div class="form-group">
+                        @if(Auth::user()->divisi->nama_divisi == 'Assurance')
 
-                            <label>
-
-                                Nomor Tiket
-
-                            </label>
+                            <label>Nomor Tiket</label>
 
                             <input
                                 type="text"
-                                class="form-control"
                                 name="nomor_tiket"
-                                placeholder="Contoh : IN123456789">
+                                class="form-control"
+                                placeholder="Masukkan Nomor Tiket"
+                                required>
 
-                        </div>
+                        @elseif(Auth::user()->divisi->nama_divisi == 'Provisioning')
+
+                            <label>Nomor WO</label>
+
+                            <input
+                                type="text"
+                                name="nomor_wo"
+                                class="form-control"
+                                placeholder="Masukkan Nomor WO"
+                                required>
+
+                        @endif
 
                     </div>
 

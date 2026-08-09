@@ -168,10 +168,132 @@
 
 </div>
 
-    <div class="card shadow">
+    {{-- TABEL ASSURANCE --}}
+<div class="card shadow mb-4">
 
-        <div class="card-header bg-primary text-white">
-            Monitoring Teknisi Hari Ini
+    <div class="card-header bg-primary text-white">
+        <strong>Monitoring Teknisi Assurance</strong>
+    </div>
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover">
+
+                <thead class="thead-light">
+
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Teknisi</th>
+                        <th>Divisi</th>
+                        <th>Status</th>
+                        <th>Pekerjaan</th>
+                        <th>Target</th>
+                        <th>Progress</th>
+                        <th>Lokasi</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                @php
+                    $assurance = $teknisis->filter(function ($teknisi) {
+                        return $teknisi->divisi->nama_divisi == 'Assurance';
+                    });
+                @endphp
+
+                @forelse($assurance as $teknisi)
+
+                    <tr>
+
+                        <td>{{ $loop->iteration }}</td>
+
+                        <td>{{ $teknisi->user->nama }}</td>
+
+                        <td>{{ $teknisi->divisi->nama_divisi }}</td>
+
+                        <td>
+
+                            @if(optional($teknisi->user->absensiTerakhir)->status == 'aktif')
+
+                                <span class="badge badge-success">
+                                    Online
+                                </span>
+
+                            @else
+
+                                <span class="badge badge-secondary">
+                                    Offline
+                                </span>
+
+                            @endif
+
+                        </td>
+
+                        <td>{{ $teknisi->jumlah }}</td>
+
+                        <td>{{ $teknisi->target }}</td>
+
+                        <td width="220">
+
+                            <div class="progress">
+
+                                <div class="progress-bar bg-success"
+                                     role="progressbar"
+                                     style="width: {{ $teknisi->persen }}%">
+
+                                    {{ round($teknisi->persen) }}%
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            <a href="{{ route('admin.monitoring.detail', $teknisi->id) }}"
+                                class="btn btn-primary btn-sm">
+
+                                <i class="fas fa-user"></i>
+                                Detail
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                @empty
+
+                    <tr>
+
+                        <td colspan="8" class="text-center">
+                            Tidak ada teknisi Assurance.
+                        </td>
+
+                    </tr>
+
+                @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{{-- TABEL PROVISIONING --}}
+    <div class="card shadow mb-4">
+
+        <div class="card-header bg-success text-white">
+            <strong>Monitoring Teknisi Provisioning</strong>
         </div>
 
         <div class="card-body">
@@ -197,79 +319,85 @@
 
                     <tbody>
 
-                    @foreach($teknisis as $teknisi)
+                    @php
+                        $provisioning = $teknisis->filter(function ($teknisi) {
+                            return $teknisi->divisi->nama_divisi == 'Provisioning';
+                        });
+                    @endphp
 
-                    <tr>
+                    @forelse($provisioning as $teknisi)
 
-                        <td>{{ $loop->iteration }}</td>
+                        <tr>
 
-                        <td>{{ $teknisi->user->nama }}</td>
+                            <td>{{ $loop->iteration }}</td>
 
-                        <td>{{ $teknisi->divisi->nama_divisi }}</td>
+                            <td>{{ $teknisi->user->nama }}</td>
 
-                        <td>
+                            <td>{{ $teknisi->divisi->nama_divisi }}</td>
 
-                            @if(optional($teknisi->user->absensiTerakhir)->status=='aktif')
+                            <td>
 
-                                <span class="badge badge-success">
-                                    Online
-                                </span>
+                                @if(optional($teknisi->user->absensiTerakhir)->status == 'aktif')
 
-                            @else
+                                    <span class="badge badge-success">
+                                        Online
+                                    </span>
 
-                                <span class="badge badge-secondary">
-                                    Offline
-                                </span>
+                                @else
 
-                            @endif
+                                    <span class="badge badge-secondary">
+                                        Offline
+                                    </span>
 
-                        </td>
+                                @endif
 
-                        <td>
+                            </td>
 
-                            {{ $teknisi->jumlah }}
+                            <td>{{ $teknisi->jumlah }}</td>
 
-                        </td>
+                            <td>{{ $teknisi->target }}</td>
 
-                        <td>
+                            <td width="220">
 
-                            {{ $teknisi->target }}
+                                <div class="progress">
 
-                        </td>
+                                    <div class="progress-bar bg-success"
+                                        role="progressbar"
+                                        style="width: {{ $teknisi->persen }}%">
 
-                        <td width="220">
+                                        {{ round($teknisi->persen) }}%
 
-                            <div class="progress">
-
-                                <div class="progress-bar bg-success"
-                                     role="progressbar"
-                                     style="width: {{ $teknisi->persen }}%">
-
-                                    {{ round($teknisi->persen) }}%
+                                    </div>
 
                                 </div>
 
-                            </div>
+                            </td>
 
-                        </td>
+                            <td>
 
-                        <td>
-
-                            {{-- <a href="{{ route('admin.teknisi.detail', $teknisi->id) }}" --}}
-                            <a href=""
+                                <a href="{{ route('admin.monitoring.detail', $teknisi->id) }}"
                                 class="btn btn-primary btn-sm">
 
-                                <i class="fas fa-user"></i>
+                                    <i class="fas fa-user"></i>
+                                    Detail
 
-                                Detail
+                                </a>
 
-                            </a>
+                            </td>
 
-                        </td>
+                        </tr>
 
-                    </tr>
+                    @empty
 
-                    @endforeach
+                        <tr>
+
+                            <td colspan="8" class="text-center">
+                                Tidak ada teknisi Provisioning.
+                            </td>
+
+                        </tr>
+
+                    @endforelse
 
                     </tbody>
 

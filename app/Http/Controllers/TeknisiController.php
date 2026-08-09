@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class TeknisiController extends Controller
 {
@@ -36,7 +37,7 @@ class TeknisiController extends Controller
 
             $absensiLama->update([
                 'jam_keluar' => '07:00:00',
-                'status' => 'selesai'
+                'status' => 'offline'
             ]);
 
         }
@@ -209,12 +210,43 @@ class TeknisiController extends Controller
 
     public function storePekerjaan(Request $request)
     {
+        $divisi = Auth::user()->divisi->nama_divisi;
+
+        // Ambil nomor berdasarkan divisi
+        if ($divisi == 'Assurance') {
+            $nomorTiket = $request->input('nomor_tiket') ?? $request->input('nomor_referensi');
+            $nomorWo = null;
+        } elseif ($divisi == 'Provisioning') {
+            $nomorTiket = null;
+            $nomorWo = $request->input('nomor_wo') ?? $request->input('nomor_referensi');
+        } else {
+            return back()->withErrors([
+                'divisi' => 'Divisi teknisi tidak valid.'
+            ])->withInput();
+        }
+
+        $request->merge([
+            'nomor_tiket' => $nomorTiket,
+            'nomor_wo' => $nomorWo,
+        ]);
+
         $request->validate([
-            'nomor_tiket' => 'required|unique:pekerjaans',
+            'nomor_tiket' => $divisi == 'Assurance'
+                ? 'required|unique:pekerjaans,nomor_tiket'
+                : 'nullable',
+
+            'nomor_wo' => $divisi == 'Provisioning'
+                ? 'required|unique:pekerjaans,nomor_wo'
+                : 'nullable',
+
             'nama_pelanggan' => 'required',
+
             'alamat_pelanggan' => 'required',
+
             'jenis_pekerjaan' => 'required',
+
             'deskripsi' => 'required',
+
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
@@ -226,14 +258,25 @@ class TeknisiController extends Controller
 
         Pekerjaan::create([
             'user_id' => Auth::id(),
-            'nomor_tiket' => $request->nomor_tiket,
+
+            'nomor_tiket' => $nomorTiket,
+
+            'nomor_wo' => $nomorWo,
+
             'nama_pelanggan' => $request->nama_pelanggan,
+
             'alamat_pelanggan' => $request->alamat_pelanggan,
+
             'jenis_pekerjaan' => $request->jenis_pekerjaan,
+
             'deskripsi' => $request->deskripsi,
+
             'foto' => $foto,
+
             'tanggal' => now()->toDateString(),
+
             'status' => 'selesai',
+
             'jam_selesai' => now()->format('H:i:s'),
         ]);
 
@@ -293,24 +336,31 @@ class TeknisiController extends Controller
     }
 
     public function updatePassword(Request $request)
-    {
+{
         $request->validate([
             'password_lama' => 'required',
             'password_baru' => 'required|min:6|confirmed',
+        ], [
+            'password_lama.required' => 'Password lama wajib diisi.',
+            'password_baru.required' => 'Password baru wajib diisi.',
+            'password_baru.min' => 'Password baru minimal 6 karakter.',
+            'password_baru.confirmed' => 'Konfirmasi password baru tidak sama.',
         ]);
 
-        $user = User::findOrFail(Auth::id());
+        $user = User::find(Auth::id());
+
+        if (!$user) {
+            return back()->with('error', 'Data pengguna tidak ditemukan.');
+        }
 
         if (!Hash::check($request->password_lama, $user->password)) {
             return back()->with('error', 'Password lama tidak sesuai.');
         }
 
-        $user->update([
-            'password' => Hash::make($request->password_baru)
+        User::where('id', $user->id)->update([
+            'password' => Hash::make($request->password_baru),
         ]);
 
-        return redirect()
-            ->route('teknisi.profil')
-            ->with('success', 'Password berhasil diubah.');
+        return back()->with('success', 'Password berhasil diubah.');
     }
 }

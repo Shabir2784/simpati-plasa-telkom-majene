@@ -28,9 +28,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 
 });
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -49,6 +46,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::put('/teknisi/{id}', [AdminController::class, 'updateTeknisi'])->name('teknisi.update');
     Route::delete('/teknisi/{id}', [AdminController::class, 'destroyTeknisi'])->name('teknisi.destroy');
     Route::get('/teknisi/{id}/lokasi', [AdminController::class, 'lokasiTeknisi'])->name('teknisi.lokasi');
+    Route::put('/teknisi/{id}/reset-password', [AdminController::class, 'resetPassword'])->name('teknisi.resetPassword');
+    
 
     Route::get('/divisi', [AdminController::class, 'divisi'])->name('divisi');
     Route::get('/divisi/{id}', [AdminController::class, 'detailDivisi'])->name('divisi.detail');
@@ -59,6 +58,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/target/assurance', [AdminController::class, 'targetAssurance'])->name('target.assurance');
     Route::get('/target/provisioning', [AdminController::class, 'targetProvisioning'])->name('target.provisioning');
     Route::get('/divisi/{id}', [AdminController::class, 'detailDivisi'])->name('divisi.detail');
+    Route::get('/target/{id}/detail', [AdminController::class, 'detailTarget'])->name('target.detail');
     // Route::post('/target/store', [AdminController::class, 'storeTarget'])->name('target.store');
     // Route::get('/target/{id}/edit', [AdminController::class, 'editTarget'])->name('target.edit');
     // Route::put('/target/{id}', [AdminController::class, 'updateTarget'])->name('target.update');
@@ -66,12 +66,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     Route::get('/pekerjaan', [AdminController::class, 'pekerjaan'])->name('pekerjaan');
     Route::get('/monitoring', [AdminController::class,'monitoring'])->name('monitoring');
+    Route::get('/monitoring/teknisi/{id}', [AdminController::class, 'detailMonitoring'])->name('monitoring.detail');
     Route::get('/absensi', [AdminController::class, 'absensi'])->name('absensi');
-    Route::get('/absensi/pdf', [AdminController::class, 'exportAbsensiPdf'])->name('absensi.pdf');
-    Route::get('/absensi/excel', [AdminController::class, 'exportAbsensiExcel'])->name('absensi.excel');
+    Route::get('/absensi/assurance/pdf', [AdminController::class, 'exportAbsensiPdfAssurance'])->name('absensi.assurance.pdf');
+    Route::get('/absensi/assurance/excel', [AdminController::class, 'exportAbsensiExcelAssurance'])->name('absensi.assurance.excel');
+
+    Route::get('/absensi/provisioning/pdf', [AdminController::class, 'exportAbsensiPdfProvisioning'])->name('absensi.provisioning.pdf');
+    Route::get('/absensi/provisioning/excel', [AdminController::class, 'exportAbsensiExcelProvisioning'])->name('absensi.provisioning.excel');
     // Route::get('/absensi/lokasi/{id}', [AdminController::class, 'lokasiTeknisi'])->name('absensi.lokasi');
 
     Route::get('/laporan', [AdminController::class, 'laporan'])->name('laporan');
+    Route::get('/laporan/{id}/detail', [AdminController::class, 'detailLaporan'])->name('laporan.detail');
     Route::get('/laporan/export/pdf',[AdminController::class,'exportLaporanPdf'])->name('laporan.pdf');
     Route::get('/laporan/export/excel',[AdminController::class,'exportLaporanExcel'])->name('laporan.excel');
     Route::get('/profil', [AdminController::class, 'profil'])->name('profil');
@@ -97,6 +102,7 @@ Route::prefix('teknisi')->name('teknisi.')->middleware(['auth', 'teknisi'])->gro
     Route::get('/profil', [TeknisiController::class, 'profil'])->name('profil');
     Route::get('/profil/edit', [TeknisiController::class, 'editProfil'])->name('profil.edit');
     Route::get('/password', [TeknisiController::class, 'password'])->name('password');
+    Route::put('/password/update', [TeknisiController::class, 'updatePassword'])->name('password.update');
     Route::put('/profil/update', [TeknisiController::class, 'updateProfil'])->name('profil.update');
 
     Route::get('/riwayat-pekerjaan', [TeknisiController::class, 'riwayat'])->name('riwayat');

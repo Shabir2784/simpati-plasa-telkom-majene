@@ -122,23 +122,29 @@
 
                             <td class="text-center">
                                 <span class="badge badge-primary p-2">
-                                    5
+                                    {{ $target }}
                                 </span>
                             </td>
 
                             <td class="text-center">
-                                0
+                                {{ $item->realisasi }}
                             </td>
 
                             <td class="text-center">
 
                                 <div class="progress">
 
-                                    <div class="progress-bar bg-success"
-                                         role="progressbar"
-                                         style="width:0%">
+                                    @php
+                                        $persentase = $target > 0
+                                            ? min(($item->realisasi / $target) * 100, 100)
+                                            : 0;
+                                    @endphp
 
-                                        0%
+                                    <div class="progress-bar bg-success"
+                                        role="progressbar"
+                                        style="width: {{ $persentase }}%">
+
+                                        {{ number_format($persentase, 0) }}%
 
                                     </div>
 
@@ -148,19 +154,31 @@
 
                             <td class="text-center">
 
-                                <span class="badge badge-secondary">
-                                    Belum Ada
-                                </span>
+                                @if($item->realisasi >= $target)
+                                    <span class="badge badge-success">
+                                        Target Tercapai
+                                    </span>
+                                @elseif($item->realisasi > 0)
+                                    <span class="badge badge-warning">
+                                        Belum Mencapai Target
+                                    </span>
+                                @else
+                                    <span class="badge badge-secondary">
+                                        Belum Ada
+                                    </span>
+                                @endif
 
                             </td>
 
                             <td class="text-center">
 
-                                <button class="btn btn-warning btn-sm">
+                                <a href="{{ route('admin.target.detail', $item->id) }}"
+                                class="btn btn-info btn-sm"
+                                title="Lihat Detail">
 
-                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-eye"></i>
 
-                                </button>
+                                </a>
 
                             </td>
 

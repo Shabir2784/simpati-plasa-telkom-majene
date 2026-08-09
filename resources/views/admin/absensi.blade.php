@@ -8,10 +8,11 @@
         Absensi Teknisi
     </h1>
 
-    <!-- KPI -->
+    {{-- ================= KPI ================= --}}
 
     <div class="row mt-4">
 
+        {{-- Hadir Hari Ini --}}
         <div class="col-xl-3 col-md-6 mb-4">
 
             <div class="card border-left-success shadow h-100">
@@ -23,23 +24,17 @@
                         <div class="col">
 
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-2">
-
                                 Hadir Hari Ini
-
                             </div>
 
                             <div class="h2 font-weight-bold">
-
                                 {{ $totalHadir }}
-
                             </div>
 
                         </div>
 
                         <div class="col-auto">
-
                             <i class="fas fa-user-check fa-3x text-success"></i>
-
                         </div>
 
                     </div>
@@ -50,6 +45,8 @@
 
         </div>
 
+
+        {{-- Sudah Pulang --}}
         <div class="col-xl-3 col-md-6 mb-4">
 
             <div class="card border-left-primary shadow h-100">
@@ -61,23 +58,17 @@
                         <div class="col">
 
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-2">
-
                                 Sudah Pulang
-
                             </div>
 
                             <div class="h2 font-weight-bold">
-
                                 {{ $sudahPulang }}
-
                             </div>
 
                         </div>
 
                         <div class="col-auto">
-
                             <i class="fas fa-sign-out-alt fa-3x text-primary"></i>
-
                         </div>
 
                     </div>
@@ -88,6 +79,8 @@
 
         </div>
 
+
+        {{-- Belum Pulang --}}
         <div class="col-xl-3 col-md-6 mb-4">
 
             <div class="card border-left-warning shadow h-100">
@@ -99,23 +92,17 @@
                         <div class="col">
 
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-2">
-
                                 Belum Pulang
-
                             </div>
 
                             <div class="h2 font-weight-bold">
-
                                 {{ $belumPulang }}
-
                             </div>
 
                         </div>
 
                         <div class="col-auto">
-
                             <i class="fas fa-clock fa-3x text-warning"></i>
-
                         </div>
 
                     </div>
@@ -126,6 +113,8 @@
 
         </div>
 
+
+        {{-- Terlambat --}}
         <div class="col-xl-3 col-md-6 mb-4">
 
             <div class="card border-left-danger shadow h-100">
@@ -137,23 +126,17 @@
                         <div class="col">
 
                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-2">
-
                                 Terlambat
-
                             </div>
 
                             <div class="h2 font-weight-bold">
-
                                 {{ $terlambat }}
-
                             </div>
 
                         </div>
 
                         <div class="col-auto">
-
                             <i class="fas fa-exclamation-circle fa-3x text-danger"></i>
-
                         </div>
 
                     </div>
@@ -164,203 +147,358 @@
 
         </div>
 
-        
-
     </div>
+
+
+    {{-- ====================================================== --}}
+    {{-- TABEL ASSURANCE --}}
+    {{-- ====================================================== --}}
 
     <div class="card shadow mb-4">
 
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary text-white">
 
-        <h6 class="m-0 font-weight-bold text-primary">
-            Data Absensi Teknisi Hari Ini
-        </h6>
+            <strong>
+                Absensi Teknisi - Assurance
+            </strong>
 
-        <span class="badge badge-primary">
-            {{ $teknisis->count() }} Teknisi
-        </span>
+        </div>
 
-    </div>
+        <div class="card-body">
 
-    <div class="card-body">
+            <div class="table-responsive">
 
-        <div class="table-responsive">
+                <table class="table table-bordered table-hover">
 
-            <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
 
-                <thead class="thead-light">
+                        <tr>
 
-                    <tr>
+                            <th width="50">No</th>
+                            <th>Nama Teknisi</th>
+                            <th>Divisi</th>
+                            <th>Jam Masuk</th>
+                            <th>Jam Keluar</th>
+                            <th>Status</th>
+                            <th>Durasi</th>
 
-                        <th width="50">No</th>
+                        </tr>
 
-                        <th>Nama Teknisi</th>
+                    </thead>
 
-                        <th>Divisi</th>
+                    <tbody>
 
-                        <th>Jam Masuk</th>
+                        @forelse($assurance as $teknisi)
 
-                        <th>Jam Keluar</th>
+                            <tr>
 
-                        <th>Status</th>
+                                <td>
+                                    {{ $loop->iteration }}
+                                </td>
 
-                        <th>Lokasi</th>
+                                <td>
+                                    {{ $teknisi->user->nama }}
+                                </td>
 
-                        <th>Durasi</th>
+                                <td>
+                                    {{ $teknisi->divisi->nama_divisi }}
+                                </td>
 
-                        <th width="100">Aksi</th>
+                                <td>
+                                    {{ optional($teknisi->absensiHariIni)->jam_masuk ?? '-' }}
+                                </td>
 
-                    </tr>
+                                <td>
+                                    {{ optional($teknisi->absensiHariIni)->jam_keluar ?? '-' }}
+                                </td>
 
-                </thead>
+                                <td>
 
-                <tbody>
+                                    @if(!$teknisi->absensiHariIni)
 
-                    @foreach($teknisis as $teknisi)
+                                        <span class="badge badge-danger">
+                                            Belum Hadir
+                                        </span>
 
-                    <tr>
+                                    @elseif($teknisi->absensiHariIni->jam_keluar)
 
-                        <td>{{ $loop->iteration }}</td>
+                                        <span class="badge badge-success">
+                                            Sudah Pulang
+                                        </span>
 
-                        <td>{{ $teknisi->user->nama }}</td>
+                                    @else
 
-                        <td>{{ $teknisi->divisi->nama_divisi }}</td>
+                                        <span class="badge badge-warning">
+                                            Belum Pulang
+                                        </span>
 
-                        <td>
-                            {{ optional($teknisi->absensi)->jam_masuk ?? '-' }}
-                        </td>
+                                    @endif
 
-                        <td>
-                            {{ optional($teknisi->absensi)->jam_keluar ?? '-' }}
-                        </td>
+                                </td>
 
-                        <td>
+                                <td>
 
-                            @if(!$teknisi->absensi)
+                                    @if($teknisi->absensiHariIni && $teknisi->absensiHariIni->jam_keluar)
 
-                                <span class="badge badge-danger">
-                                    Belum Hadir
-                                </span>
+                                        {{
+                                            \Carbon\Carbon::parse($teknisi->absensiHariIni->jam_masuk)
+                                            ->diff(
+                                                \Carbon\Carbon::parse($teknisi->absensiHariIni->jam_keluar)
+                                            )
+                                            ->format('%H Jam %I Menit')
+                                        }}
 
-                            @elseif($teknisi->absensi->jam_keluar)
+                                    @elseif($teknisi->absensiHariIni)
 
-                                <span class="badge badge-success">
-                                    Sudah Pulang
-                                </span>
+                                        Sedang Bekerja
 
-                            @else
+                                    @else
 
-                                <span class="badge badge-warning">
-                                    Belum Pulang
-                                </span>
+                                        -
 
-                            @endif
+                                    @endif
 
-                        </td>
+                                </td>
 
-                        <td>
+                            </tr>
 
-                            @if($teknisi->absensi)
-                                
-                                <a href=""
-                                    class="btn btn-info btn-sm">
+                        @empty
 
-                                    <i class="fas fa-map-marker-alt"></i>
+                            <tr>
 
-                                    Lihat
+                                <td colspan="7" class="text-center">
+                                    Belum ada teknisi Assurance.
+                                </td>
 
-                                </a>
+                            </tr>
 
-                            @else
+                        @endforelse
 
-                                -
+                    </tbody>
 
-                            @endif
+                </table>
 
-                        </td>
-
-                        <td>
-
-                            @if($teknisi->absensi && $teknisi->absensi->jam_keluar)
-
-                                {{
-                                    \Carbon\Carbon::parse($teknisi->absensi->jam_masuk)
-                                    ->diff(
-                                        \Carbon\Carbon::parse($teknisi->absensi->jam_keluar)
-                                    )
-                                    ->format('%H Jam %I Menit')
-                                }}
-
-                            @elseif($teknisi->absensi)
-
-                                Sedang Bekerja
-
-                            @else
-
-                                -
-
-                            @endif
-
-                        </td>
-
-                        <td>
-
-                            @if($teknisi->absensi)
-
-                                <a href="#"
-                                   class="btn btn-primary btn-sm">
-
-                                    <i class="fas fa-eye"></i>
-
-                                    Detail
-
-                                </a>
-
-                            @else
-
-                                -
-
-                            @endif
-
-                        </td>
-
-                    </tr>
-
-                    @endforeach
-
-                </tbody>
-
-            </table>
+            </div>
 
         </div>
 
     </div>
-    <div class="d-flex justify-content-end mb-3">
+     {{-- ====================================================== --}}
+    {{-- EXPORT ASSURANCE --}}
+    {{-- ====================================================== --}}
 
-    <a href="{{ route('admin.absensi.pdf') }}"
-       class="btn btn-danger mr-2">
+    <div class="card shadow mb-4">
 
-        <i class="fas fa-file-pdf"></i>
+        <div class="card-header bg-primary text-white">
 
-        Export PDF
+            <strong>
+                Export Absensi Assurance
+            </strong>
 
-    </a>
+        </div>
 
-    <a href="{{ route('admin.absensi.excel') }}"
-       class="btn btn-success">
+        <div class="card-body">
 
-        <i class="fas fa-file-excel"></i>
+            <div class="d-flex">
 
-        Export Excel
+                <a href="{{ route('admin.absensi.assurance.pdf') }}"
+                   class="btn btn-danger mr-2">
 
-    </a>
+                    <i class="fas fa-file-pdf"></i>
+                    PDF Assurance
+
+                </a>
+
+                <a href="{{ route('admin.absensi.assurance.excel') }}"
+                   class="btn btn-success">
+
+                    <i class="fas fa-file-excel"></i>
+                    Excel Assurance
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    {{-- ====================================================== --}}
+    {{-- TABEL PROVISIONING --}}
+    {{-- ====================================================== --}}
+
+    <div class="card shadow mb-4">
+
+        <div class="card-header bg-success text-white">
+
+            <strong>
+                Absensi Teknisi - Provisioning
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover">
+
+                    <thead class="thead-light">
+
+                        <tr>
+
+                            <th width="50">No</th>
+                            <th>Nama Teknisi</th>
+                            <th>Divisi</th>
+                            <th>Jam Masuk</th>
+                            <th>Jam Keluar</th>
+                            <th>Status</th>
+                            <th>Durasi</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @forelse($provisioning as $teknisi)
+
+                            <tr>
+
+                                <td>
+                                    {{ $loop->iteration }}
+                                </td>
+
+                                <td>
+                                    {{ $teknisi->user->nama }}
+                                </td>
+
+                                <td>
+                                    {{ $teknisi->divisi->nama_divisi }}
+                                </td>
+
+                                <td>
+                                    {{ optional($teknisi->absensiHariIni)->jam_masuk ?? '-' }}
+                                </td>
+
+                                <td>
+                                    {{ optional($teknisi->absensiHariIni)->jam_keluar ?? '-' }}
+                                </td>
+
+                                <td>
+
+                                    @if(!$teknisi->absensiHariIni)
+
+                                        <span class="badge badge-danger">
+                                            Belum Hadir
+                                        </span>
+
+                                    @elseif($teknisi->absensiHariIni->jam_keluar)
+
+                                        <span class="badge badge-success">
+                                            Sudah Pulang
+                                        </span>
+
+                                    @else
+
+                                        <span class="badge badge-warning">
+                                            Belum Pulang
+                                        </span>
+
+                                    @endif
+
+                                </td>
+
+                                <td>
+
+                                    @if($teknisi->absensiHariIni && $teknisi->absensiHariIni->jam_keluar)
+
+                                        {{
+                                            \Carbon\Carbon::parse($teknisi->absensiHariIni->jam_masuk)
+                                            ->diff(
+                                                \Carbon\Carbon::parse($teknisi->absensiHariIni->jam_keluar)
+                                            )
+                                            ->format('%H Jam %I Menit')
+                                        }}
+
+                                    @elseif($teknisi->absensiHariIni)
+
+                                        Sedang Bekerja
+
+                                    @else
+
+                                        -
+
+                                    @endif
+
+                                </td>
+
+                            </tr>
+
+                        @empty
+
+                            <tr>
+
+                                <td colspan="7" class="text-center">
+                                    Belum ada teknisi Provisioning.
+                                </td>
+
+                            </tr>
+
+                        @endforelse
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    {{-- ====================================================== --}}
+    {{-- EXPORT PROVISIONING --}}
+    {{-- ====================================================== --}}
+
+    <div class="card shadow mb-4">
+
+        <div class="card-header bg-success text-white">
+
+            <strong>
+                Export Absensi Provisioning
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="d-flex">
+
+                <a href="{{ route('admin.absensi.provisioning.pdf') }}"
+                   class="btn btn-danger mr-2">
+
+                    <i class="fas fa-file-pdf"></i>
+                    PDF Provisioning
+
+                </a>
+
+                <a href="{{ route('admin.absensi.provisioning.excel') }}"
+                   class="btn btn-success">
+
+                    <i class="fas fa-file-excel"></i>
+                    Excel Provisioning
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
-
-</div>
-
-    
-</div>
-
 
 @endsection

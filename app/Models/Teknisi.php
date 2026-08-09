@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
+use App\Models\Divisi;
+use App\Models\Absensi;
 
 class Teknisi extends Model
 {
@@ -28,5 +31,10 @@ class Teknisi extends Model
     public function divisi()
     {
         return $this->belongsTo(Divisi::class);
+    }
+    public function absensiHariIni()
+    {
+        return $this->hasOne(Absensi::class, 'user_id', 'user_id')
+                    ->whereDate('tanggal', now()->toDateString());
     }
 }

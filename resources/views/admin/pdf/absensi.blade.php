@@ -3,82 +3,109 @@
 
 <head>
 
-<meta charset="utf-8">
+    <meta charset="utf-8">
 
-<style>
+    <style>
 
-body{
-    font-family: DejaVu Sans;
-    font-size:12px;
-}
+        body {
+            font-family: DejaVu Sans;
+            font-size: 12px;
+        }
 
-table{
-    width:100%;
-    border-collapse:collapse;
-}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-table,th,td{
-    border:1px solid black;
-}
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
 
-th,td{
-    padding:6px;
-    text-align:center;
-}
+        th,
+        td {
+            padding: 6px;
+            text-align: center;
+        }
 
-h2{
-    text-align:center;
-}
+        h2 {
+            text-align: center;
+        }
 
-</style>
+    </style>
 
 </head>
 
 <body>
 
-<h2>Laporan Absensi Teknisi</h2>
+    <h2>
+        Laporan Absensi Teknisi - {{ $divisi }}
+    </h2>
 
-<p>Tanggal : {{ now()->format('d-m-Y') }}</p>
+    <p>
+        Tanggal : {{ now()->format('d-m-Y') }}
+    </p>
 
-<table>
+    <table>
 
-<thead>
+        <thead>
 
-<tr>
+            <tr>
 
-<th>No</th>
-<th>Nama</th>
-<th>Masuk</th>
-<th>Keluar</th>
-<th>Status</th>
+                <th>No</th>
 
-</tr>
+                <th>Nama</th>
 
-</thead>
+                <th>Divisi</th>
 
-<tbody>
+                <th>Masuk</th>
 
-@foreach($absensis as $item)
+                <th>Keluar</th>
 
-<tr>
+                <th>Status</th>
 
-<td>{{ $loop->iteration }}</td>
+            </tr>
 
-<td>{{ $item->user->nama }}</td>
+        </thead>
 
-<td>{{ $item->jam_masuk }}</td>
+        <tbody>
 
-<td>{{ $item->jam_keluar }}</td>
+            @foreach($absensis as $item)
 
-<td>{{ $item->status }}</td>
+                <tr>
 
-</tr>
+                    <td>
+                        {{ $loop->iteration }}
+                    </td>
 
-@endforeach
+                    <td>
+                        {{ $item->user->nama }}
+                    </td>
 
-</tbody>
+                    <td>
+                        {{ optional($item->user->teknisi->divisi)->nama_divisi }}
+                    </td>
 
-</table>
+                    <td>
+                        {{ $item->jam_masuk ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $item->jam_keluar ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $item->status }}
+                    </td>
+
+                </tr>
+
+            @endforeach
+
+        </tbody>
+
+    </table>
 
 </body>
 

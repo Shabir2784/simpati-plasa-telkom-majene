@@ -143,7 +143,11 @@ class AdminController extends Controller
             'user.absensiTerakhir',
             'user.divisi'
         ])
-        ->latest('waktu_update')
+        ->whereIn('id', function ($query) {
+            $query->selectRaw('MAX(id)')
+                ->from('lokasi_teknisis')
+                ->groupBy('user_id');
+        })
         ->get();
 
         return view('admin.dashboardAdmin', compact(
@@ -249,13 +253,28 @@ class AdminController extends Controller
             ->with('success', 'Data teknisi berhasil dihapus.');
     }
     public function lokasiTeknisi($id)
-{
-    return response()->json([
-        'nama' => 'Ahmad',
-        'latitude' => -3.5402,
-        'longitude' => 118.9707
-    ]);
-}
+    {
+        $teknisi = Teknisi::with('user')->findOrFail($id);
+
+        $lokasi = LokasiTeknisi::where('user_id', $teknisi->user_id)
+            ->latest('waktu_update')
+            ->first();
+
+        if (!$lokasi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lokasi teknisi belum tersedia.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'nama' => $teknisi->user->nama,
+            'latitude' => (float) $lokasi->latitude,
+            'longitude' => (float) $lokasi->longitude,
+            'waktu_update' => $lokasi->waktu_update
+        ]);
+    }
 
     // public function lokasiTeknisi($id)
     // {
@@ -366,11 +385,18 @@ class AdminController extends Controller
         $divisi = Divisi::where('nama_divisi', 'Assurance')->first();
 
         $teknisis = Teknisi::with('user')
-                    ->where('divisi_id', $divisi->id)
-                    ->get();
+            ->where('divisi_id', $divisi->id)
+            ->get();
 
         $target = TargetProduktivitas::where('divisi_id', $divisi->id)
-                    ->value('target');
+            ->value('target');
+
+        foreach ($teknisis as $teknisi) {
+            $teknisi->realisasi = Pekerjaan::where('user_id', $teknisi->user_id)
+                ->whereDate('tanggal', today())
+                ->where('status', 'selesai')
+                ->count();
+        }
 
         return view('admin.target', [
             'judul' => 'Target Produktivitas - Assurance',
@@ -384,11 +410,18 @@ class AdminController extends Controller
         $divisi = Divisi::where('nama_divisi', 'Provisioning')->first();
 
         $teknisis = Teknisi::with('user')
-                    ->where('divisi_id', $divisi->id)
-                    ->get();
+            ->where('divisi_id', $divisi->id)
+            ->get();
 
         $target = TargetProduktivitas::where('divisi_id', $divisi->id)
-                    ->value('target');
+            ->value('target');
+
+        foreach ($teknisis as $teknisi) {
+            $teknisi->realisasi = Pekerjaan::where('user_id', $teknisi->user_id)
+                ->whereDate('tanggal', today())
+                ->where('status', 'selesai')
+                ->count();
+        }
 
         return view('admin.target', [
             'judul' => 'Target Produktivitas - Provisioning',
@@ -396,6 +429,46 @@ class AdminController extends Controller
             'teknisis' => $teknisis,
             'target' => $target
         ]);
+    }
+    public function detailTarget($id)
+    {
+        $teknisi = Teknisi::with('user', 'divisi')->findOrFail($id);
+
+        $target = TargetProduktivitas::where('divisi_id', $teknisi->divisi_id)
+            ->value('target');
+
+        $pekerjaans = Pekerjaan::where('user_id', $teknisi->user_id)
+            ->whereDate('tanggal', today())
+            ->where('status', 'selesai')
+            ->orderBy('jam_selesai')
+            ->get();
+
+        $realisasi = $pekerjaans->count();
+
+        $persentase = $target > 0
+            ? min(($realisasi / $target) * 100, 100)
+            : 0;
+
+        return view('admin.detailTarget', compact(
+            'teknisi',
+            'target',
+            'pekerjaans',
+            'realisasi',
+            'persentase'
+        ));
+    }
+    public function resetPassword(Request $request, $id)
+    {
+        $request->validate([
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        $teknisi = Teknisi::findOrFail($id);
+
+        $teknisi->user->password = Hash::make($request->password);
+        $teknisi->user->save();
+
+        return back()->with('success', 'Password teknisi berhasil direset.');
     }
 
     public function pekerjaan()
@@ -460,80 +533,140 @@ class AdminController extends Controller
             'totalPekerjaan'
         ));
     }
+    public function detailMonitoring($id)
+    {
+        $teknisi = Teknisi::with(['user', 'divisi'])->findOrFail($id);
+
+        $pekerjaans = Pekerjaan::where('user_id', $teknisi->user_id)
+            ->whereDate('tanggal', today())
+            ->latest()
+            ->get();
+
+        $target = TargetProduktivitas::where('divisi_id', $teknisi->divisi_id)
+            ->value('target') ?? 0;
+
+        $jumlah = $pekerjaans->count();
+
+        $persen = $target > 0
+            ? min(($jumlah / $target) * 100, 100)
+            : 0;
+
+        return view('admin.detailMonitoring', compact(
+            'teknisi',
+            'pekerjaans',
+            'target',
+            'jumlah',
+            'persen'
+        ));
+    }
     
     public function absensi()
     {
-        $today = today();
-
         $teknisis = Teknisi::with([
             'user',
-            'divisi'
+            'divisi',
+            'absensiHariIni'
         ])->get();
 
-        foreach ($teknisis as $teknisi) {
+        $assurance = $teknisis->filter(function ($teknisi) {
+            return $teknisi->divisi->nama_divisi == 'Assurance';
+        });
 
-            $teknisi->absensi = Absensi::where('user_id', $teknisi->user_id)
-                ->whereDate('tanggal', $today)
-                ->first();
+        $provisioning = $teknisis->filter(function ($teknisi) {
+            return $teknisi->divisi->nama_divisi == 'Provisioning';
+        });
 
-        }
-
-        $totalHadir = $teknisis->filter(function ($item) {
-            return $item->absensi != null;
+        $totalHadir = $teknisis->filter(function ($teknisi) {
+            return $teknisi->absensiHariIni;
         })->count();
 
-        $sudahPulang = $teknisis->filter(function ($item) {
-            return $item->absensi && $item->absensi->jam_keluar;
+        $sudahPulang = $teknisis->filter(function ($teknisi) {
+            return $teknisi->absensiHariIni && $teknisi->absensiHariIni->jam_keluar;
         })->count();
 
-        $belumPulang = $teknisis->filter(function ($item) {
-            return $item->absensi && !$item->absensi->jam_keluar;
+        $belumPulang = $teknisis->filter(function ($teknisi) {
+            return $teknisi->absensiHariIni && !$teknisi->absensiHariIni->jam_keluar;
         })->count();
-    
-        $terlambat = $teknisis->filter(function ($item) {
-            return $item->absensi &&
-                $item->absensi->jam_masuk > '08:00:00';
+
+        $terlambat = $teknisis->filter(function ($teknisi) {
+            return $teknisi->absensiHariIni &&
+                $teknisi->absensiHariIni->status == 'terlambat';
         })->count();
 
         return view('admin.absensi', compact(
             'teknisis',
+            'assurance',
+            'provisioning',
             'totalHadir',
             'sudahPulang',
             'belumPulang',
             'terlambat'
         ));
     }
-    public function exportAbsensiExcel()
-    {
-        return Excel::download(
-            new AbsensiExport,
-            'Absensi_' . now()->format('Y-m-d') . '.xlsx'
-        );
-    }
-    public function exportAbsensiPdf()
-    {
-        $absensis = Absensi::with('user')
-            ->whereDate('tanggal', today())
-            ->get();
+    public function exportAbsensiExcelAssurance()
+{
+    return Excel::download(
+        new AbsensiExport('Assurance'),
+        'Absensi_Assurance_' . now()->format('Y-m-d') . '.xlsx'
+    );
+}
 
-        $pdf = Pdf::loadView('admin.pdf.absensi', compact('absensis'));
+public function exportAbsensiExcelProvisioning()
+{
+    return Excel::download(
+        new AbsensiExport('Provisioning'),
+        'Absensi_Provisioning_' . now()->format('Y-m-d') . '.xlsx'
+    );
+}
+
+    public function exportAbsensiPdfAssurance()
+    {
+        $absensis = Absensi::with([
+            'user.teknisi.divisi'
+        ])
+        ->whereDate('tanggal', today())
+        ->whereHas('user.teknisi.divisi', function ($query) {
+            $query->where('nama_divisi', 'Assurance');
+        })
+        ->get();
+
+        $divisi = 'Assurance';
+
+        $pdf = Pdf::loadView(
+            'admin.pdf.absensi',
+            compact('absensis', 'divisi')
+        );
 
         return $pdf->download(
-            'Absensi_' . now()->format('Y-m-d') . '.pdf'
+            'Absensi_Assurance_' . now()->format('Y-m-d') . '.pdf'
+        );
+    }
+
+    public function exportAbsensiPdfProvisioning()
+    {
+        $absensis = Absensi::with([
+            'user.teknisi.divisi'
+        ])
+        ->whereDate('tanggal', today())
+        ->whereHas('user.teknisi.divisi', function ($query) {
+            $query->where('nama_divisi', 'Provisioning');
+        })
+        ->get();
+
+        $divisi = 'Provisioning';
+
+        $pdf = Pdf::loadView(
+            'admin.pdf.absensi',
+            compact('absensis', 'divisi')
+        );
+
+        return $pdf->download(
+            'Absensi_Provisioning_' . now()->format('Y-m-d') . '.pdf'
         );
     }
 
     public function laporan()
     {
-        $today = now()->toDateString();
-
-        $laporans = Pekerjaan::with([
-            'user',
-            'user.teknisi.divisi'
-        ])
-        ->latest('tanggal')
-        ->paginate(10);
-
         $totalPekerjaan = Pekerjaan::count();
 
         $selesai = Pekerjaan::where('status', 'selesai')->count();
@@ -541,6 +674,80 @@ class AdminController extends Controller
         $pending = Pekerjaan::where('status', 'pending')->count();
 
         $totalTeknisi = Teknisi::count();
+
+        $tanggalAwal = request('tanggal_awal');
+        $tanggalAkhir = request('tanggal_akhir');
+        $divisi = request('divisi');
+        $status = request('status');
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUERY DASAR
+        |--------------------------------------------------------------------------
+        */
+
+        $query = Pekerjaan::with([
+            'user',
+            'user.teknisi.divisi'
+        ]);
+
+        if ($tanggalAwal) {
+            $query->whereDate('tanggal', '>=', $tanggalAwal);
+        }
+
+        if ($tanggalAkhir) {
+            $query->whereDate('tanggal', '<=', $tanggalAkhir);
+        }
+
+        if ($divisi) {
+            $query->whereHas('user.teknisi', function ($q) use ($divisi) {
+                $q->where('divisi_id', $divisi);
+            });
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATA ASSURANCE
+        |--------------------------------------------------------------------------
+        */
+
+        $assurance = (clone $query)
+            ->whereHas('user.teknisi.divisi', function ($q) {
+                $q->where('nama_divisi', 'Assurance');
+            })
+            ->latest('tanggal')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATA PROVISIONING
+        |--------------------------------------------------------------------------
+        */
+
+        $provisioning = (clone $query)
+            ->whereHas('user.teknisi.divisi', function ($q) {
+                $q->where('nama_divisi', 'Provisioning');
+            })
+            ->latest('tanggal')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATA DIVISI
+        |--------------------------------------------------------------------------
+        */
+
+        $divisis = Divisi::all();
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROGRESS DIVISI
+        |--------------------------------------------------------------------------
+        */
 
         $progressDivisi = Divisi::with('teknisis')->get()->map(function ($divisi) {
 
@@ -563,75 +770,34 @@ class AdminController extends Controller
                 : 0;
 
             return [
-
                 'nama' => $divisi->nama_divisi,
-
                 'target' => $targetTotal,
-
                 'selesai' => $pekerjaan,
-
-                'persentase' => min($persentase,100)
-
+                'persentase' => min($persentase, 100)
             ];
-
         });
-        $tanggalAwal = request('tanggal_awal');
-        $tanggalAkhir = request('tanggal_akhir');
-        $divisi = request('divisi');
-        $status = request('status');
-
-        $query = Pekerjaan::with([
-            'user',
-            'user.teknisi.divisi'
-        ]);
-
-        if ($tanggalAwal) {
-            $query->whereDate('tanggal', '>=', $tanggalAwal);
-        }
-
-        if ($tanggalAkhir) {
-            $query->whereDate('tanggal', '<=', $tanggalAkhir);
-        }
-
-        if ($divisi) {
-
-            $query->whereHas('user.teknisi', function ($q) use ($divisi) {
-
-                $q->where('divisi_id', $divisi);
-
-            });
-
-        }
-
-        if ($status) {
-
-            $query->where('status', $status);
-
-        }
-
-        $laporans = $query
-            ->latest('tanggal')
-            ->paginate(10);
-
-        $divisis = Divisi::all();
 
         return view('admin.laporan', compact(
-
-            'laporans',
-
+            'assurance',
+            'provisioning',
             'totalPekerjaan',
-
             'selesai',
-
             'pending',
-
             'totalTeknisi',
-
             'progressDivisi',
             'divisis'
-
         ));
     }
+    public function detailLaporan($id)
+    {
+        $pekerjaan = Pekerjaan::with([
+            'user',
+            'user.teknisi.divisi'
+        ])->findOrFail($id);
+
+        return view('admin.detailLaporan', compact('pekerjaan'));
+    }
+    
     public function exportLaporanPdf()
     {
         $laporans = Pekerjaan::with([

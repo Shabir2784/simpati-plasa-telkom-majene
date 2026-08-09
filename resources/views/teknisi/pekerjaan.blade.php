@@ -36,9 +36,21 @@
 
                 @csrf
 
+                @php
+                    $divisi = Auth::user()->divisi->nama_divisi;
+                @endphp
+
                 <div class="form-group">
-                    <label>Nomor Tiket</label>
-                    <input type="text" name="nomor_tiket" class="form-control" required>
+                    <label>
+                        {{ $divisi == 'Provisioning' ? 'Nomor WO' : 'Nomor Tiket' }}
+                    </label>
+
+                    <input
+                        type="text"
+                        name="nomor_referensi"
+                        class="form-control"
+                        placeholder="{{ $divisi == 'Provisioning' ? 'Masukkan Nomor WO' : 'Masukkan Nomor Tiket' }}"
+                        required>
                 </div>
 
                 <div class="form-group">

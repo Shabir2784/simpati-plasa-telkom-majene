@@ -18,6 +18,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
 
+
     protected $fillable = [
         'nama',
         'nik',
@@ -27,7 +28,12 @@ class User extends Authenticatable
         'divisi_id',
         'no_hp',
         'foto',
-        'is_active'
+        'is_active',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     // public function getAuthIdentifierName()

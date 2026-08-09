@@ -12,11 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pekerjaans', function (Blueprint $table) {
+
             $table->id();
 
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
-            $table->string('nomor_tiket')->unique();
+            $table->string('nomor_tiket')->nullable()->unique();
+
+            $table->string('nomor_wo')->nullable()->unique();
 
             $table->string('nama_pelanggan');
 
@@ -32,9 +37,12 @@ return new class extends Migration
 
             $table->time('jam_selesai')->nullable();
 
-            $table->integer('durasi')->nullable()->comment('Durasi pekerjaan dalam menit');
+            $table->integer('durasi')->nullable()
+                ->comment('Durasi pekerjaan dalam menit');
 
-            $table->enum('status', ['pending', 'selesai'])->default('pending')->index();
+            $table->enum('status', ['pending', 'selesai'])
+                ->default('pending')
+                ->index();
 
             $table->timestamps();
         });

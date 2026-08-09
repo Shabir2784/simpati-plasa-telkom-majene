@@ -3,7 +3,15 @@
 @section('content')
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Laporan</h1>
+
+    <h1 class="h3 mb-4 text-gray-800">
+        Laporan
+    </h1>
+
+
+    {{-- ====================================================== --}}
+    {{-- KPI --}}
+    {{-- ====================================================== --}}
 
     <div class="row">
 
@@ -28,9 +36,7 @@
                         </div>
 
                         <div class="col-auto">
-
                             <i class="fas fa-briefcase fa-3x text-gray-300"></i>
-
                         </div>
 
                     </div>
@@ -40,6 +46,7 @@
             </div>
 
         </div>
+
 
         <div class="col-xl-3 col-md-6 mb-4">
 
@@ -62,9 +69,7 @@
                         </div>
 
                         <div class="col-auto">
-
                             <i class="fas fa-check-circle fa-3x text-gray-300"></i>
-
                         </div>
 
                     </div>
@@ -74,6 +79,7 @@
             </div>
 
         </div>
+
 
         <div class="col-xl-3 col-md-6 mb-4">
 
@@ -96,9 +102,7 @@
                         </div>
 
                         <div class="col-auto">
-
                             <i class="fas fa-hourglass-half fa-3x text-gray-300"></i>
-
                         </div>
 
                     </div>
@@ -108,6 +112,7 @@
             </div>
 
         </div>
+
 
         <div class="col-xl-3 col-md-6 mb-4">
 
@@ -130,9 +135,7 @@
                         </div>
 
                         <div class="col-auto">
-
                             <i class="fas fa-users fa-3x text-gray-300"></i>
-
                         </div>
 
                     </div>
@@ -145,21 +148,24 @@
 
     </div>
 
+
+    {{-- ====================================================== --}}
+    {{-- FILTER --}}
+    {{-- ====================================================== --}}
+
     <div class="card shadow mb-4">
 
         <div class="card-header">
 
             <h6 class="font-weight-bold text-primary">
-
                 Filter Laporan
-
             </h6>
 
         </div>
 
         <div class="card-body">
 
-            <form method="GET">
+            <form method="GET" action="{{ route('admin.laporan') }}">
 
                 <div class="row">
 
@@ -167,23 +173,29 @@
 
                         <label>Tanggal Awal</label>
 
-                        <input type="date"
+                        <input
+                            type="date"
                             name="tanggal_awal"
                             class="form-control"
-                            value="{{ request('tanggal_awal') }}">
+                            value="{{ request('tanggal_awal') }}"
+                        >
 
                     </div>
+
 
                     <div class="col-md-3">
 
                         <label>Tanggal Akhir</label>
 
-                        <input type="date"
+                        <input
+                            type="date"
                             name="tanggal_akhir"
                             class="form-control"
-                            value="{{ request('tanggal_akhir') }}">
+                            value="{{ request('tanggal_akhir') }}"
+                        >
 
                     </div>
+
 
                     <div class="col-md-2">
 
@@ -191,19 +203,23 @@
 
                         <select
                             name="divisi"
-                            class="form-control">
+                            class="form-control"
+                        >
 
-                            <option value="">Semua</option>
-
-                            @foreach($divisis as $divisi)
-
-                            <option
-                                value="{{ $divisi->id }}"
-                                {{ request('divisi')==$divisi->id ? 'selected' : '' }}>
-
-                                {{ $divisi->nama_divisi }}
-
+                            <option value="">
+                                Semua
                             </option>
+
+                            @foreach($divisis as $divisiItem)
+
+                                <option
+                                    value="{{ $divisiItem->id }}"
+                                    {{ request('divisi') == $divisiItem->id ? 'selected' : '' }}
+                                >
+
+                                    {{ $divisiItem->nama_divisi }}
+
+                                </option>
 
                             @endforeach
 
@@ -211,41 +227,47 @@
 
                     </div>
 
+
                     <div class="col-md-2">
 
                         <label>Status</label>
 
                         <select
                             name="status"
-                            class="form-control">
+                            class="form-control"
+                        >
 
-                            <option value="">Semua</option>
-
-                            <option value="pending"
-                                {{ request('status')=='pending' ? 'selected' : '' }}>
-
-                                Pending
-
+                            <option value="">
+                                Semua
                             </option>
 
-                            <option value="selesai"
-                                {{ request('status')=='selesai' ? 'selected' : '' }}>
+                            <option
+                                value="pending"
+                                {{ request('status') == 'pending' ? 'selected' : '' }}
+                            >
+                                Pending
+                            </option>
 
+                            <option
+                                value="selesai"
+                                {{ request('status') == 'selesai' ? 'selected' : '' }}
+                            >
                                 Selesai
-
                             </option>
 
                         </select>
 
                     </div>
 
+
                     <div class="col-md-2 d-flex align-items-end">
 
                         <button
-                            class="btn btn-primary btn-block">
+                            type="submit"
+                            class="btn btn-primary btn-block"
+                        >
 
                             <i class="fas fa-search"></i>
-
                             Filter
 
                         </button>
@@ -260,37 +282,18 @@
 
     </div>
 
+
+    {{-- ====================================================== --}}
+    {{-- DATA LAPORAN ASSURANCE --}}
+    {{-- ====================================================== --}}
+
     <div class="card shadow mb-4">
 
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
 
-            <h6 class="m-0 font-weight-bold text-success">
-
-                Data Laporan Produktivitas
-
+            <h6 class="m-0 font-weight-bold text-primary">
+                Data Laporan Produktivitas - Assurance
             </h6>
-
-            <div>
-
-                <a href="{{ route('admin.laporan.pdf') }}"
-                class="btn btn-danger btn-sm">
-
-                    <i class="fas fa-file-pdf"></i>
-
-                    Export PDF
-
-                </a>
-
-                <a href="{{ route('admin.laporan.excel') }}"
-                class="btn btn-success btn-sm">
-
-                    <i class="fas fa-file-excel"></i>
-
-                    Export Excel
-
-                </a>
-
-            </div>
 
         </div>
 
@@ -305,23 +308,14 @@
                         <tr>
 
                             <th>No</th>
-
                             <th>Tanggal</th>
-
                             <th>Teknisi</th>
-
                             <th>Divisi</th>
-
                             <th>No Tiket</th>
-
                             <th>Pelanggan</th>
-
-                            <th>Jenis</th>
-
+                            <th>Jenis Pekerjaan</th>
                             <th>Durasi</th>
-
                             <th>Status</th>
-
                             <th>Aksi</th>
 
                         </tr>
@@ -330,113 +324,91 @@
 
                     <tbody>
 
-                        @forelse($laporans as $laporan)
+                        @forelse($assurance as $laporan)
 
-                        <tr>
+                            <tr>
 
-                            <td>
+                                <td>
+                                    {{ $loop->iteration }}
+                                </td>
 
-                                {{ $laporans->firstItem() + $loop->index }}
+                                <td>
+                                    {{ \Carbon\Carbon::parse($laporan->tanggal)->format('d-m-Y') }}
+                                </td>
 
-                            </td>
+                                <td>
+                                    {{ optional($laporan->user)->nama ?? '-' }}
+                                </td>
 
-                            <td>
+                                <td>
+                                    {{ optional(optional($laporan->user)->teknisi->divisi)->nama_divisi ?? '-' }}
+                                </td>
 
-                                {{ \Carbon\Carbon::parse($laporan->tanggal)->format('d-m-Y') }}
+                                <td>
+                                    {{ $laporan->nomor_tiket ?? '-' }}
+                                </td>
 
-                            </td>
+                                <td>
+                                    {{ $laporan->nama_pelanggan ?? '-' }}
+                                </td>
 
-                            <td>
+                                <td>
+                                    {{ $laporan->jenis_pekerjaan ?? '-' }}
+                                </td>
 
-                                {{ $laporan->user->nama }}
+                                <td>
+                                    {{ $laporan->durasi ?? '-' }}
 
-                            </td>
+                                    @if($laporan->durasi)
+                                        Menit
+                                    @endif
+                                </td>
 
-                            <td>
+                                <td>
 
-                                {{ optional($laporan->user->teknisi->divisi)->nama_divisi }}
+                                    @if($laporan->status == 'selesai')
 
-                            </td>
+                                        <span class="badge badge-success">
+                                            Selesai
+                                        </span>
 
-                            <td>
+                                    @else
 
-                                {{ $laporan->nomor_tiket }}
+                                        <span class="badge badge-warning">
+                                            Pending
+                                        </span>
 
-                            </td>
+                                    @endif
 
-                            <td>
+                                </td>
 
-                                {{ $laporan->nama_pelanggan }}
+                                <td>
 
-                            </td>
+                                    
 
-                            <td>
+                                        <a href="{{ route('admin.laporan.detail', $laporan->id) }}"
+                                        class="btn btn-info btn-sm">
 
-                                {{ $laporan->jenis_pekerjaan }}
+                                            <i class="fas fa-eye"></i>
+                                            Detail
 
-                            </td>
+                                        </a>
 
-                            <td>
+                                    
 
-                                {{ $laporan->durasi ?? '-' }}
+                                </td>
 
-                                @if($laporan->durasi)
-
-                                    Menit
-
-                                @endif
-
-                            </td>
-
-                            <td>
-
-                                @if($laporan->status=='selesai')
-
-                                    <span class="badge badge-success">
-
-                                        Selesai
-
-                                    </span>
-
-                                @else
-
-                                    <span class="badge badge-warning">
-
-                                        Pending
-
-                                    </span>
-
-                                @endif
-
-                            </td>
-
-                            <td>
-
-                                <a href="#"
-
-                                class="btn btn-info btn-sm">
-
-                                    <i class="fas fa-eye"></i>
-
-                                    Detail
-
-                                </a>
-
-                            </td>
-
-                        </tr>
+                            </tr>
 
                         @empty
 
-                        <tr>
+                            <tr>
 
-                            <td colspan="10" class="text-center">
+                                <td colspan="10" class="text-center">
+                                    Tidak ada data laporan Assurance.
+                                </td>
 
-                                Tidak ada data.
-
-                            </td>
-
-                        </tr>
+                            </tr>
 
                         @endforelse
 
@@ -446,105 +418,151 @@
 
             </div>
 
-            <div class="mt-3">
-
-                {{ $laporans->links() }}
-
-            </div>
-
         </div>
 
     </div>
+
+
+    {{-- ====================================================== --}}
+    {{-- DATA LAPORAN PROVISIONING --}}
+    {{-- ====================================================== --}}
 
     <div class="card shadow mb-4">
 
-        <div class="card-header py-3">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
 
-            <h6 class="m-0 font-weight-bold text-primary">
+        <h6 class="m-0 font-weight-bold text-success">
+            Data Laporan Produktivitas - Provisioning
+        </h6>
 
-                Ringkasan Produktivitas per Divisi
+    </div>
 
-            </h6>
+    <div class="card-body">
 
-        </div>
+        <div class="table-responsive">
 
-        <div class="card-body">
+            <table class="table table-bordered table-hover">
 
-            @foreach($progressDivisi as $divisi)
+                <thead class="thead-light">
 
-            <div class="mb-4">
+                    <tr>
 
-                <div class="d-flex justify-content-between mb-2">
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Teknisi</th>
+                        <th>Divisi</th>
+                        <th>No WO</th>
+                        <th>Pelanggan</th>
+                        <th>Jenis Pekerjaan</th>
+                        <th>Durasi</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
 
-                    <strong>
+                    </tr>
 
-                        {{ $divisi['nama'] }}
+                </thead>
 
-                    </strong>
+                <tbody>
 
-                    <span>
+                    @forelse($provisioning as $laporan)
 
-                        {{ $divisi['selesai'] }}
+                        <tr>
 
-                        /
+                            <td>
+                                {{ $loop->iteration }}
+                            </td>
 
-                        {{ $divisi['target'] }}
+                            <td>
+                                {{ \Carbon\Carbon::parse($laporan->tanggal)->format('d-m-Y') }}
+                            </td>
 
-                        Pekerjaan
+                            <td>
+                                {{ optional($laporan->user)->nama ?? '-' }}
+                            </td>
 
-                    </span>
+                            <td>
+                                {{ optional(optional($laporan->user)->teknisi->divisi)->nama_divisi ?? '-' }}
+                            </td>
 
-                </div>
+                            <td>
+                                {{ $laporan->nomor_wo ?? '-' }}
+                            </td>
 
-                <div class="progress" style="height:25px;">
+                            <td>
+                                {{ $laporan->nama_pelanggan ?? '-' }}
+                            </td>
 
-                    <div class="progress-bar
+                            <td>
+                                {{ $laporan->jenis_pekerjaan ?? '-' }}
+                            </td>
 
-                        @if($divisi['persentase']>=80)
+                            <td>
+                                {{ $laporan->durasi ?? '-' }}
 
-                            bg-success
+                                @if($laporan->durasi)
+                                    Menit
+                                @endif
+                            </td>
 
-                        @elseif($divisi['persentase']>=60)
+                            <td>
 
-                            bg-warning
+                                @if($laporan->status == 'selesai')
 
-                        @else
+                                    <span class="badge badge-success">
+                                        Selesai
+                                    </span>
 
-                            bg-danger
+                                @else
 
-                        @endif"
+                                    <span class="badge badge-warning">
+                                        Pending
+                                    </span>
 
-                        role="progressbar"
+                                @endif
 
-                        style="width: {{ $divisi['persentase'] }}%;">
+                            </td>
 
-                        {{ $divisi['persentase'] }}%
+                            <td>
 
-                    </div>
+                                
 
-                </div>
+                                    <a href="{{ route('admin.laporan.detail', $laporan->id) }}"
+                                    class="btn btn-info btn-sm">
 
-                <small class="text-muted">
+                                        <i class="fas fa-eye"></i>
+                                        Detail
 
-                    Target Divisi :
-                    {{ $divisi['target'] }}
-                    pekerjaan
+                                    </a>
 
-                    |
+                        
 
-                    Tercapai :
-                    {{ $divisi['selesai'] }}
-                    pekerjaan
+                            </td>
 
-                </small>
+                        </tr>
 
-            </div>
+                    @empty
 
-            @endforeach
+                        <tr>
+
+                            <td colspan="10" class="text-center">
+                                Tidak ada data laporan Provisioning.
+                            </td>
+
+                        </tr>
+
+                    @endforelse
+
+                </tbody>
+
+            </table>
 
         </div>
 
     </div>
+
+</div>
+
+
 </div>
 
 @endsection

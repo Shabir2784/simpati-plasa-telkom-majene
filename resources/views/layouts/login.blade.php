@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -17,150 +18,112 @@
 
     <style>
 
-        body{
-
-            background: linear-gradient(135deg,#ffffff,#f4f6f9);
-
-            height:100vh;
-
-            display:flex;
-
-            justify-content:center;
-
-            align-items:center;
-
-            font-family:'Nunito',sans-serif;
-
+        body {
+            background: linear-gradient(135deg, #ffffff, #f4f6f9);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Nunito', sans-serif;
         }
 
-        .login-card{
-
-            width:420px;
-
-            border:none;
-
-            border-radius:18px;
-
-            box-shadow:0 15px 40px rgba(0,0,0,.12);
-
-            overflow:hidden;
-
-            animation:fade .7s;
-
+        .login-card {
+            width: 420px;
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, .12);
+            overflow: hidden;
+            animation: fade .7s;
         }
 
-        @keyframes fade{
-
-            from{
-
-                opacity:0;
-
-                transform:translateY(30px);
-
+        @keyframes fade {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
             }
 
-            to{
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-                opacity:1;
+        .login-header {
+            background: #E2001A;
+            color: white;
+            text-align: center;
+            padding: 15px 20px 25px;
+        }
 
-                transform:translateY(0);
+        .login-header img {
+            width: 170px;
+            margin-bottom: 20px;
+        }
 
+        .login-header h2 {
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .login-header p {
+            margin: 0;
+            font-size: 14px;
+            opacity: .9;
+        }
+
+        .card-body {
+            padding: 35px;
+        }
+
+        .form-control {
+            height: 48px;
+            border-radius: 10px;
+        }
+
+        .form-control:focus {
+            border-color: #E2001A;
+            box-shadow: 0 0 0 .2rem rgba(226, 0, 26, .15);
+        }
+
+        .btn-login {
+            background: #E2001A;
+            color: white;
+            height: 48px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .btn-login:hover {
+            background: #C60017;
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-top: 25px;
+        }
+
+        /* NOTIFIKASI LOGIN */
+        .login-alert {
+            border-radius: 10px;
+            font-size: 14px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            animation: alertFade .4s ease-in-out;
+        }
+
+        @keyframes alertFade {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
             }
 
-        }
-
-        .login-header{
-
-            background:#E2001A;
-
-            color:white;
-
-            text-align:center;
-
-            padding:15px 20px 25px;
-
-        }
-
-        .login-header img{
-
-            width:170px;
-
-            margin-bottom:20px;
-
-        }
-
-        .login-header h2{
-
-            font-weight:800;
-
-            margin-bottom:5px;
-
-        }
-
-        .login-header p{
-
-            margin:0;
-
-            font-size:14px;
-
-            opacity:.9;
-
-        }
-
-        .card-body{
-
-            padding:35px;
-
-        }
-
-        .form-control{
-
-            height:48px;
-
-            border-radius:10px;
-
-        }
-
-        .form-control:focus{
-
-            border-color:#E2001A;
-
-            box-shadow:0 0 0 .2rem rgba(226,0,26,.15);
-
-        }
-
-        .btn-login{
-
-            background:#E2001A;
-
-            color:white;
-
-            height:48px;
-
-            border-radius:10px;
-
-            font-weight:700;
-
-        }
-
-        .btn-login:hover{
-
-            background:#C60017;
-
-            color:white;
-
-        }
-
-        .footer{
-
-            text-align:center;
-
-            color:#888;
-
-            font-size:13px;
-
-            margin-top:25px;
-
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
     </style>
@@ -174,8 +137,8 @@
     <div class="login-header">
 
         <img src="{{ asset('images/logo-telkom.png') }}"
-            alt="Logo Telkom"
-            style="width:170px; margin-bottom:20px;">
+             alt="Logo Telkom"
+             style="width:170px; margin-bottom:20px;">
 
         <h2>SIMPATI</h2>
 
@@ -184,6 +147,21 @@
     </div>
 
     <div class="card-body">
+
+        {{-- NOTIFIKASI JIKA LOGIN GAGAL --}}
+        @if ($errors->any())
+            <div class="alert alert-danger login-alert" role="alert">
+
+                <i class="fas fa-exclamation-circle mr-2"></i>
+
+                <strong>Login gagal!</strong>
+
+                <br>
+
+                NIK atau password yang Anda masukkan salah.
+
+            </div>
+        @endif
 
         @yield('content')
 
@@ -198,3 +176,4 @@
 </body>
 
 </html>
+
