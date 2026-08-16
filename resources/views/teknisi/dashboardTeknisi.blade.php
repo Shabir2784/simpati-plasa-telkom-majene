@@ -8,26 +8,55 @@
         Dashboard Teknisi
     </h1>
 
-    {{-- Notifikasi --}}
+
+    {{-- NOTIFIKASI SUCCESS --}}
     @if(session('success'))
+
         <div class="alert alert-success alert-dismissible fade show">
+
             {{ session('success') }}
-            <button class="close" data-dismiss="alert">&times;</button>
+
+            <button
+                class="close"
+                data-dismiss="alert"
+            >
+                &times;
+            </button>
+
         </div>
+
     @endif
 
+
+    {{-- NOTIFIKASI ERROR --}}
     @if(session('error'))
+
         <div class="alert alert-danger alert-dismissible fade show">
+
             {{ session('error') }}
-            <button class="close" data-dismiss="alert">&times;</button>
+
+            <button
+                class="close"
+                data-dismiss="alert"
+            >
+                &times;
+            </button>
+
         </div>
+
     @endif
 
+
+    {{-- ========================================================= --}}
+    {{-- INFORMASI DASHBOARD --}}
+    {{-- ========================================================= --}}
 
     <div class="row">
 
-        <!-- Status Kerja -->
+
+        {{-- STATUS KERJA --}}
         <div class="col-xl-3 col-md-6 mb-4">
+
             <div class="card border-left-primary shadow h-100 py-2">
 
                 <div class="card-body">
@@ -39,9 +68,13 @@
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
 
                         @if($absensi && $absensi->status == 'aktif')
+
                             Online
+
                         @else
+
                             Offline
+
                         @endif
 
                     </div>
@@ -49,10 +82,11 @@
                 </div>
 
             </div>
+
         </div>
 
 
-        <!-- Status Absensi -->
+        {{-- STATUS ABSENSI --}}
         <div class="col-xl-3 col-md-6 mb-4">
 
             <div class="card border-left-success shadow h-100 py-2">
@@ -66,9 +100,13 @@
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
 
                         @if($absensi)
+
                             Sudah Check In
+
                         @else
+
                             Belum Check In
+
                         @endif
 
                     </div>
@@ -80,7 +118,7 @@
         </div>
 
 
-        <!-- Jumlah Pekerjaan -->
+        {{-- JUMLAH PEKERJAAN --}}
         <div class="col-xl-3 col-md-6 mb-4">
 
             <div class="card border-left-warning shadow h-100 py-2">
@@ -104,29 +142,37 @@
         </div>
 
 
-        <!-- Target -->
+        {{-- TARGET --}}
         <div class="col-xl-3 col-md-6 mb-4">
 
             <div class="card border-left-info shadow">
+
                 <div class="card-body">
 
-                    <h6>Target Hari Ini</h6>
+                    <h6>
+                        Target Hari Ini
+                    </h6>
 
-                    <h3>{{ $jumlahPekerjaan }} / {{ $targetHarian }}</h3>
+                    <h3>
+                        {{ $jumlahPekerjaan }} / {{ $targetHarian }}
+                    </h3>
 
                     <div class="progress mt-3">
 
-                        <div class="progress-bar bg-success"
+                        <div
+                            class="progress-bar bg-success"
                             role="progressbar"
-                            style="width: {{ $persentase }}%">
+                            style="width: {{ $persentase }}%"
+                        >
 
-                            {{ number_format($persentase,0) }}%
+                            {{ number_format($persentase, 0) }}%
 
                         </div>
 
                     </div>
 
                 </div>
+
             </div>
 
         </div>
@@ -134,17 +180,25 @@
     </div>
 
 
-    <!-- CHECK IN / CHECK OUT -->
+    {{-- ========================================================= --}}
+    {{-- CHECK IN / CHECK OUT --}}
+    {{-- ========================================================= --}}
+
     <div class="card shadow mb-4">
 
         <div class="card-header bg-success text-white">
+
             <h6 class="m-0 font-weight-bold">
                 Absensi Teknisi
             </h6>
+
         </div>
+
 
         <div class="card-body text-center">
 
+
+            {{-- STATUS --}}
             <h5>
 
                 Status :
@@ -171,19 +225,41 @@
 
             </h5>
 
+
+            {{-- ================================================= --}}
             {{-- BELUM CHECK IN --}}
+            {{-- ================================================= --}}
+
             @if(!$absensi)
+
 
                 @if($bolehCheckIn)
 
-                    <form action="{{ route('teknisi.checkin') }}" method="POST" id="checkinForm">
+                    <form
+                        action="{{ route('teknisi.checkin') }}"
+                        method="POST"
+                        id="checkinForm"
+                    >
 
                         @csrf
 
-                        <input type="hidden" name="latitude" id="latitude">
-                        <input type="hidden" name="longitude" id="longitude">
+                        <input
+                            type="hidden"
+                            name="latitude"
+                            id="latitude"
+                        >
 
-                        <button class="btn btn-success btn-lg mt-3">
+                        <input
+                            type="hidden"
+                            name="longitude"
+                            id="longitude"
+                        >
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-success btn-lg mt-3"
+                        >
 
                             <i class="fas fa-sign-in-alt"></i>
 
@@ -193,9 +269,14 @@
 
                     </form>
 
+
                 @else
 
-                    <button class="btn btn-secondary btn-lg mt-3" disabled>
+                    <button
+                        type="button"
+                        class="btn btn-secondary btn-lg mt-3"
+                        disabled
+                    >
 
                         <i class="fas fa-clock"></i>
 
@@ -205,37 +286,95 @@
 
                 @endif
 
+
+
+            {{-- ================================================= --}}
+            {{-- SUDAH CHECK IN, BELUM CHECK OUT --}}
+            {{-- ================================================= --}}
+
             @elseif(!$absensi->jam_keluar)
 
-            <form action="{{ route('teknisi.checkout') }}" method="POST" id="checkoutForm">
 
-                @csrf
+                @if($bolehCheckOut)
 
-                <input type="hidden" name="latitude" id="latitude_out">
-                <input type="hidden" name="longitude" id="longitude_out">
 
-                <button class="btn btn-danger btn-lg mt-3">
+                    <form
+                        action="{{ route('teknisi.checkout') }}"
+                        method="POST"
+                        id="checkoutForm"
+                    >
 
-                    <i class="fas fa-sign-out-alt"></i>
+                        @csrf
 
-                    Check Out
+                        <input
+                            type="hidden"
+                            name="latitude"
+                            id="latitude_out"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="longitude"
+                            id="longitude_out"
+                        >
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-danger btn-lg mt-3"
+                        >
+
+                            <i class="fas fa-sign-out-alt"></i>
+
+                            Check Out
+
+                        </button>
+
+                    </form>
+
+
+                @else
+
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary btn-lg mt-3"
+                        disabled
+                    >
+
+                        <i class="fas fa-clock"></i>
+
+                        Check Out Dibuka Pukul 17.00
+
+                    </button>
+
+
+                @endif
+
+
+
+            {{-- ================================================= --}}
+            {{-- SUDAH CHECK OUT --}}
+            {{-- ================================================= --}}
+
+            @else
+
+
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-lg mt-3"
+                    disabled
+                >
+
+                    <i class="fas fa-check-circle"></i>
+
+                    Absensi Selesai
 
                 </button>
 
-            </form>
-
-            {{-- SUDAH CHECK OUT --}}
-            @else
-
-            <button class="btn btn-secondary btn-lg mt-3" disabled>
-
-                <i class="fas fa-check-circle"></i>
-
-                Absensi Selesai
-
-            </button>
 
             @endif
+
 
         </div>
 
@@ -244,26 +383,52 @@
 </div>
 
 
-@if(!$absensi)
+{{-- ========================================================= --}}
+{{-- JAVASCRIPT CHECK IN --}}
+{{-- ========================================================= --}}
+
+@if(!$absensi && $bolehCheckIn)
 
 <script>
 
-document.getElementById('checkinForm').addEventListener('submit', function(e){
+document.addEventListener('DOMContentLoaded', function () {
 
-    e.preventDefault();
+    const checkinForm = document.getElementById('checkinForm');
 
-    navigator.geolocation.getCurrentPosition(function(position){
+    if (checkinForm) {
 
-        document.getElementById('latitude').value = position.coords.latitude;
-        document.getElementById('longitude').value = position.coords.longitude;
+        checkinForm.addEventListener('submit', function(e) {
 
-        document.getElementById('checkinForm').submit();
+            e.preventDefault();
 
-    }, function(error){
+            navigator.geolocation.getCurrentPosition(
 
-        alert(error.message);
+                function(position) {
 
-    });
+                    document.getElementById('latitude').value =
+                        position.coords.latitude;
+
+                    document.getElementById('longitude').value =
+                        position.coords.longitude;
+
+                    checkinForm.submit();
+
+                },
+
+                function(error) {
+
+                    alert(
+                        'Lokasi tidak dapat diperoleh: ' +
+                        error.message
+                    );
+
+                }
+
+            );
+
+        });
+
+    }
 
 });
 
@@ -271,62 +436,126 @@ document.getElementById('checkinForm').addEventListener('submit', function(e){
 
 @endif
 
+
+{{-- ========================================================= --}}
+{{-- JAVASCRIPT UPDATE LOKASI + CHECK OUT --}}
+{{-- ========================================================= --}}
 
 @if($absensi && !$absensi->jam_keluar)
 
 <script>
 
-// Update lokasi setiap 30 detik
-setInterval(function () {
+document.addEventListener('DOMContentLoaded', function () {
 
-    navigator.geolocation.getCurrentPosition(function (position) {
 
-        fetch("{{ route('teknisi.updateLokasi') }}", {
+    /*
+    |------------------------------------------------------------
+    | UPDATE LOKASI SETIAP 30 DETIK
+    |------------------------------------------------------------
+    */
 
-            method: "POST",
+    setInterval(function () {
 
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        navigator.geolocation.getCurrentPosition(
+
+            function (position) {
+
+                fetch(
+                    "{{ route('teknisi.updateLokasi') }}",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type": "application/json",
+
+                            "X-CSRF-TOKEN":
+                                "{{ csrf_token() }}"
+
+                        },
+
+                        body: JSON.stringify({
+
+                            latitude:
+                                position.coords.latitude,
+
+                            longitude:
+                                position.coords.longitude
+
+                        })
+
+                    }
+                );
+
             },
 
-            body: JSON.stringify({
+            function (error) {
 
-                latitude: position.coords.latitude,
+                console.log(
+                    'Lokasi tidak dapat diperbarui: ' +
+                    error.message
+                );
 
-                longitude: position.coords.longitude
+            }
 
-            })
+        );
+
+    }, 30000);
+
+
+    /*
+    |------------------------------------------------------------
+    | CHECK OUT
+    |------------------------------------------------------------
+    */
+
+    const checkoutForm =
+        document.getElementById('checkoutForm');
+
+
+    if (checkoutForm) {
+
+        checkoutForm.addEventListener('submit', function(e) {
+
+            e.preventDefault();
+
+
+            navigator.geolocation.getCurrentPosition(
+
+                function(position) {
+
+                    document.getElementById('latitude_out').value =
+                        position.coords.latitude;
+
+                    document.getElementById('longitude_out').value =
+                        position.coords.longitude;
+
+
+                    checkoutForm.submit();
+
+                },
+
+                function(error) {
+
+                    alert(
+                        'Lokasi tidak dapat diperoleh: ' +
+                        error.message
+                    );
+
+                }
+
+            );
 
         });
 
-    });
-
-}, 30000);
-
-
-// Script Check Out
-document.getElementById('checkoutForm').addEventListener('submit', function(e){
-
-    e.preventDefault();
-
-    navigator.geolocation.getCurrentPosition(function(position){
-
-        document.getElementById('latitude_out').value = position.coords.latitude;
-        document.getElementById('longitude_out').value = position.coords.longitude;
-
-        document.getElementById('checkoutForm').submit();
-
-    }, function(error){
-
-        alert(error.message);
-
-    });
+    }
 
 });
 
 </script>
 
 @endif
+
 
 @endsection

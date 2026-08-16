@@ -59,28 +59,28 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/target/provisioning', [AdminController::class, 'targetProvisioning'])->name('target.provisioning');
     Route::get('/divisi/{id}', [AdminController::class, 'detailDivisi'])->name('divisi.detail');
     Route::get('/target/{id}/detail', [AdminController::class, 'detailTarget'])->name('target.detail');
-    // Route::post('/target/store', [AdminController::class, 'storeTarget'])->name('target.store');
-    // Route::get('/target/{id}/edit', [AdminController::class, 'editTarget'])->name('target.edit');
-    // Route::put('/target/{id}', [AdminController::class, 'updateTarget'])->name('target.update');
-    // Route::delete('/target/{id}', [AdminController::class, 'destroyTarget'])->name('target.destroy');
+    
 
-    Route::get('/pekerjaan', [AdminController::class, 'pekerjaan'])->name('pekerjaan');
-    Route::get('/monitoring', [AdminController::class,'monitoring'])->name('monitoring');
+    // Route::get('/pekerjaan', [AdminController::class, 'pekerjaan'])->name('pekerjaan');
+
+    Route::get('/monitoring/assurance', [AdminController::class, 'monitoringAssurance'])->name('monitoring.assurance');
+    Route::get('/monitoring/provisioning', [AdminController::class, 'monitoringProvisioning'])->name('monitoring.provisioning');
     Route::get('/monitoring/teknisi/{id}', [AdminController::class, 'detailMonitoring'])->name('monitoring.detail');
-    Route::get('/absensi', [AdminController::class, 'absensi'])->name('absensi');
+
+    Route::get('/absensi/assurance', [AdminController::class, 'absensiAssurance'])->name('absensi.assurance');
+    Route::get('/absensi/provisioning', [AdminController::class, 'absensiProvisioning'])->name('absensi.provisioning');
     Route::get('/absensi/assurance/pdf', [AdminController::class, 'exportAbsensiPdfAssurance'])->name('absensi.assurance.pdf');
     Route::get('/absensi/assurance/excel', [AdminController::class, 'exportAbsensiExcelAssurance'])->name('absensi.assurance.excel');
-
     Route::get('/absensi/provisioning/pdf', [AdminController::class, 'exportAbsensiPdfProvisioning'])->name('absensi.provisioning.pdf');
     Route::get('/absensi/provisioning/excel', [AdminController::class, 'exportAbsensiExcelProvisioning'])->name('absensi.provisioning.excel');
-    // Route::get('/absensi/lokasi/{id}', [AdminController::class, 'lokasiTeknisi'])->name('absensi.lokasi');
 
     Route::get('/laporan', [AdminController::class, 'laporan'])->name('laporan');
+    Route::get('/laporan/assurance', [AdminController::class, 'laporanAssurance'])->name('laporan.assurance');
+    Route::get('/laporan/provisioning', [AdminController::class, 'laporanProvisioning'])->name('laporan.provisioning');
     Route::get('/laporan/{id}/detail', [AdminController::class, 'detailLaporan'])->name('laporan.detail');
-    Route::get('/laporan/export/pdf',[AdminController::class,'exportLaporanPdf'])->name('laporan.pdf');
-    Route::get('/laporan/export/excel',[AdminController::class,'exportLaporanExcel'])->name('laporan.excel');
+    Route::get('/laporan/export/pdf', [AdminController::class, 'exportLaporanPdf'])->name('laporan.pdf');
+    Route::get('/laporan/export/excel', [AdminController::class, 'exportLaporanExcel'])->name('laporan.excel');
     Route::get('/profil', [AdminController::class, 'profil'])->name('profil');
-
 
 });
 

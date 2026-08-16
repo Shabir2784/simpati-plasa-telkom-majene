@@ -68,34 +68,96 @@
         </div>
     </li>
 
-    <!-- Operasional -->
-    <div class="sidebar-heading">
-        Operasional
-    </div>
+
+    {{-- ============================= --}}
+    {{-- MONITORING --}}
+    {{-- ============================= --}}
 
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseOperasional">
-            <i class="fas fa-tools"></i>
-            <span>Operasional</span>
+
+        <a class="nav-link collapsed"
+        href="#"
+        data-toggle="collapse"
+        data-target="#collapseMonitoring">
+
+            <i class="fas fa-chart-line"></i>
+
+            <span>Monitoring</span>
+
         </a>
 
-        <div id="collapseOperasional" class="collapse" data-parent="#accordionSidebar">
+        <div id="collapseMonitoring"
+            class="collapse"
+            data-parent="#accordionSidebar">
+
             <div class="bg-white py-2 collapse-inner rounded">
 
-                <a class="collapse-item" href="{{ route('admin.pekerjaan') }}">
-                    <i class="fas fa-clipboard-list mr-2"></i> Pekerjaan
+                <a class="collapse-item"
+                href="{{ route('admin.monitoring.assurance') }}">
+
+                    <i class="fas fa-users mr-2"></i>
+                    Assurance
+
                 </a>
 
-                <a class="collapse-item" href="{{ route('admin.monitoring') }}">
-                    <i class="fas fa-chart-line mr-2"></i> Monitoring
+                <a class="collapse-item"
+                href="{{ route('admin.monitoring.provisioning') }}">
+
+                    <i class="fas fa-users mr-2"></i>
+                    Provisioning
+
+                </a> 
+
+            </div>
+
+        </div>
+
+    </li>
+
+
+    {{-- ============================= --}}
+    {{-- ABSENSI --}}
+    {{-- ============================= --}}
+
+    <li class="nav-item">
+
+        <a class="nav-link collapsed"
+        href="#"
+        data-toggle="collapse"
+        data-target="#collapseAbsensi">
+
+            <i class="fas fa-user-check"></i>
+
+            <span>Absensi</span>
+
+        </a>
+
+        <div id="collapseAbsensi"
+            class="collapse"
+            data-parent="#accordionSidebar">
+
+            <div class="bg-white py-2 collapse-inner rounded">
+
+                <a class="collapse-item"
+                href="{{ route('admin.absensi.assurance') }}">
+
+                    <i class="fas fa-user-check mr-2"></i>
+                    Assurance
+
                 </a>
 
-                <a class="collapse-item" href="{{ route('admin.absensi') }}">
-                    <i class="fas fa-user-check mr-2"></i> Absensi
+                <a class="collapse-item"
+                href="{{ route('admin.absensi.provisioning') }}">
+
+                    <i class="fas fa-user-check mr-2"></i>
+                    Provisioning
+
                 </a>
 
             </div>
+
         </div>
+
     </li>
 
     <hr class="sidebar-divider">
@@ -109,35 +171,31 @@
 
         <div id="collapseLaporan" class="collapse" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <h6 class="collapse-header">Laporan</h6>
+                <h6 class="collapse-header">
+                Laporan Produktivitas
+                </h6>
 
-                <a class="collapse-item" href="{{ route('admin.laporan') }}">
-                    Kelola Laporan
+                <a class="collapse-item"
+                href="{{ route('admin.laporan.assurance') }}">
+
+                    <i class="fas fa-tools mr-2"></i>
+                    Laporan Assurance
+
+                </a>
+
+                <a class="collapse-item"
+                href="{{ route('admin.laporan.provisioning') }}">
+
+                    <i class="fas fa-network-wired mr-2"></i>
+                    Laporan Provisioning
+
                 </a>
 
             </div>
         </div>
     </li>
 
-    <!-- Profil -->
-    <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseProfil">
-            <i class="fas fa-user-circle"></i>
-            <span>Profil</span>
-        </a>
-
-        <div id="collapseProfil" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <h6 class="collapse-header">Profil</h6>
-
-                <a class="collapse-item" href="{{ route('admin.profil') }}">
-                    Kelola Profil
-                </a>
-
-            </div>
-        </div>
-    </li>
-
+    
     <hr class="sidebar-divider">
 
     <!-- Logout -->

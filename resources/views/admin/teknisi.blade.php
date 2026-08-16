@@ -53,6 +53,7 @@
                 <th>Nama</th>
                 <th>Divisi</th>
                 <th>No HP</th>
+                <th>Alamat</th>
                 <th>Status</th>
                 <th width="120">Aksi</th>
 
@@ -84,6 +85,10 @@
 
                 <td>
                     {{ $item->no_hp }}
+                </td>
+
+                <td>
+                    {{ $item->alamat ?? '-' }}
                 </td>
 
                 <td>
@@ -152,7 +157,7 @@
 
             <tr>
 
-                <td colspan="7"
+                <td colspan="8"
                     class="text-center">
 
                     Belum ada data teknisi.
@@ -211,45 +216,18 @@
                 {{-- BODY --}}
                 <div class="modal-body">
 
-                    {{-- NAMA + EMAIL --}}
-                    <div class="row">
+                    {{-- NAMA --}}
+                    <div class="form-group">
 
-                        <div class="col-md-6">
+                        <label>
+                            Nama
+                        </label>
 
-                            <div class="form-group">
-
-                                <label>
-                                    Nama
-                                </label>
-
-                                <input type="text"
-                                       name="nama"
-                                       class="form-control"
-                                       value="{{ old('nama') }}"
-                                       required>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="col-md-6">
-
-                            <div class="form-group">
-
-                                <label>
-                                    Email
-                                </label>
-
-                                <input type="email"
-                                       name="email"
-                                       class="form-control"
-                                       value="{{ old('email') }}"
-                                       required>
-
-                            </div>
-
-                        </div>
+                        <input type="text"
+                               name="nama"
+                               class="form-control"
+                               value="{{ old('nama') }}"
+                               required>
 
                     </div>
 
@@ -271,6 +249,7 @@
                                            name="password"
                                            id="password"
                                            class="form-control"
+                                           minlength="6"
                                            required>
 
                                     <div class="input-group-append">
@@ -600,45 +579,18 @@
                 {{-- BODY --}}
                 <div class="modal-body">
 
-                    {{-- NAMA + EMAIL --}}
-                    <div class="row">
+                    {{-- NAMA --}}
+                    <div class="form-group">
 
-                        <div class="col-md-6">
+                        <label>
+                            Nama
+                        </label>
 
-                            <div class="form-group">
-
-                                <label>
-                                    Nama
-                                </label>
-
-                                <input type="text"
-                                       id="edit_nama"
-                                       name="nama"
-                                       class="form-control"
-                                       required>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="col-md-6">
-
-                            <div class="form-group">
-
-                                <label>
-                                    Email
-                                </label>
-
-                                <input type="email"
-                                       id="edit_email"
-                                       name="email"
-                                       class="form-control"
-                                       required>
-
-                            </div>
-
-                        </div>
+                        <input type="text"
+                               id="edit_nama"
+                               name="nama"
+                               class="form-control"
+                               required>
 
                     </div>
 
@@ -695,7 +647,8 @@
 
                         <select id="edit_divisi_id"
                                 name="divisi_id"
-                                class="form-control">
+                                class="form-control"
+                                required>
 
                             @foreach($divisis as $divisi)
 

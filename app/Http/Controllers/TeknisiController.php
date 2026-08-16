@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TeknisiController extends Controller
 {
@@ -19,54 +20,25 @@ class TeknisiController extends Controller
     {
         $user = Auth::user();
 
-        /*
-        |-------------------------------------------------------
-        | AUTO CHECK OUT
-        |-------------------------------------------------------
-        | Jika masih ada absensi aktif sebelum hari ini,
-        | otomatis dianggap Check Out.
-        |
-        */
-
         $absensiLama = Absensi::where('user_id', $user->id)
             ->where('status', 'aktif')
             ->whereDate('tanggal', '<', today())
             ->first();
 
         if ($absensiLama) {
-
             $absensiLama->update([
-                'jam_keluar' => '07:00:00',
+                'jam_keluar' => '17:00:00',
                 'status' => 'offline'
             ]);
-
         }
-
-        /*
-        |-------------------------------------------------------
-        | ABSENSI HARI INI
-        |-------------------------------------------------------
-        */
 
         $absensi = Absensi::where('user_id', $user->id)
             ->whereDate('tanggal', today())
             ->first();
 
-        /*
-        |-------------------------------------------------------
-        | JUMLAH PEKERJAAN HARI INI
-        |-------------------------------------------------------
-        */
-
         $jumlahPekerjaan = Pekerjaan::where('user_id', $user->id)
             ->whereDate('tanggal', today())
             ->count();
-
-        /*
-        |-------------------------------------------------------
-        | TARGET HARIAN
-        |-------------------------------------------------------
-        */
 
         $target = TargetProduktivitas::where(
             'divisi_id',
@@ -75,11 +47,14 @@ class TeknisiController extends Controller
 
         $targetHarian = $target ? $target->target : 5;
 
-        $persentase = min(
-            ($jumlahPekerjaan / $targetHarian) * 100,
-            100
-        );
+        $persentase = $targetHarian > 0
+            ? min(($jumlahPekerjaan / $targetHarian) * 100, 100)
+            : 0;
+
         $bolehCheckIn = now()->format('H:i') >= '07:00';
+
+        // Check Out baru diperbolehkan mulai pukul 17:00
+        $bolehCheckOut = now()->format('H:i') >= '17:00';
 
         return view('teknisi.dashboardTeknisi', compact(
             'user',
@@ -88,7 +63,8 @@ class TeknisiController extends Controller
             'target',
             'targetHarian',
             'persentase',
-            'bolehCheckIn'
+            'bolehCheckIn',
+            'bolehCheckOut'
         ));
     }
     public function checkIn(Request $request)
@@ -171,31 +147,45 @@ class TeknisiController extends Controller
 
         return view('teknisi.profil', compact('teknisi'));
     }
+
     public function editProfil()
     {
-        $teknisi = Teknisi::where('user_id', Auth::id())->first();
+        $teknisi = Teknisi::with('user', 'divisi')
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
         return view('teknisi.editProfil', compact('teknisi'));
     }
+
     public function updateProfil(Request $request)
     {
         $request->validate([
             'nama' => 'required',
-            'email' => 'required|email',
             'no_hp' => 'required',
-            'alamat' => 'required'
+            'alamat' => 'required',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $user = User::find(Auth::id());
+        $user = User::findOrFail(Auth::id());
 
-        $user->update([
+        $dataUser = [
             'nama' => $request->nama,
-            'email' => $request->email,
-        ]);
+        ];
+
+        if ($request->hasFile('foto')) {
+
+            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
+                Storage::disk('public')->delete($user->foto);
+            }
+
+            $dataUser['foto'] = $request->file('foto')->store('foto-teknisi', 'public');
+        }
+
+        $user->update($dataUser);
 
         $user->teknisi->update([
             'no_hp' => $request->no_hp,
-            'alamat' => $request->alamat
+            'alamat' => $request->alamat,
         ]);
 
         return redirect()
@@ -210,45 +200,97 @@ class TeknisiController extends Controller
 
     public function storePekerjaan(Request $request)
     {
-        $divisi = Auth::user()->divisi->nama_divisi;
+        $user = Auth::user();
 
-        // Ambil nomor berdasarkan divisi
-        if ($divisi == 'Assurance') {
-            $nomorTiket = $request->input('nomor_tiket') ?? $request->input('nomor_referensi');
-            $nomorWo = null;
-        } elseif ($divisi == 'Provisioning') {
-            $nomorTiket = null;
-            $nomorWo = $request->input('nomor_wo') ?? $request->input('nomor_referensi');
-        } else {
-            return back()->withErrors([
-                'divisi' => 'Divisi teknisi tidak valid.'
-            ])->withInput();
+        // =========================================================
+        // CEK LOKASI TEKNISI MASIH AKTIF
+        // =========================================================
+
+        $lokasi = LokasiTeknisi::where('user_id', $user->id)
+            ->latest('waktu_update')
+            ->first();
+
+        if (!$lokasi) {
+            return back()
+                ->with('error', 'Lokasi tidak tersedia. Aktifkan GPS terlebih dahulu.')
+                ->withInput();
         }
 
-        $request->merge([
-            'nomor_tiket' => $nomorTiket,
-            'nomor_wo' => $nomorWo,
-        ]);
+        // Lokasi dianggap aktif jika update terakhir maksimal 1 menit
+        $batasWaktu = now()->subMinutes(5);
 
-        $request->validate([
-            'nomor_tiket' => $divisi == 'Assurance'
-                ? 'required|unique:pekerjaans,nomor_tiket'
-                : 'nullable',
+        if ($lokasi->waktu_update < $batasWaktu) {
+            return back()
+                ->with('error', 'Lokasi tidak aktif. Pastikan GPS aktif dan tunggu lokasi diperbarui.')
+                ->withInput();
+        }
 
-            'nomor_wo' => $divisi == 'Provisioning'
-                ? 'required|unique:pekerjaans,nomor_wo'
-                : 'nullable',
+        // =========================================================
+        // CEK DIVISI
+        // =========================================================
 
-            'nama_pelanggan' => 'required',
+        $divisi = $user->divisi->nama_divisi;
 
-            'alamat_pelanggan' => 'required',
+        if ($divisi == 'Assurance') {
 
-            'jenis_pekerjaan' => 'required',
+            $request->validate([
+                'nomor_tiket' => 'required|unique:pekerjaans,nomor_tiket',
+                'nama_pelanggan' => 'required',
+                'alamat_pelanggan' => 'required',
+                'jenis_pekerjaan' => 'required',
+                'jenis_pekerjaan_lainnya' => 'required_if:jenis_pekerjaan,Lainnya',
+                'deskripsi' => 'required',
+                'alpro' => 'required',
+                'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
 
-            'deskripsi' => 'required',
+            $nomorTiket = $request->nomor_tiket;
+            $nomorWo = null;
+            $scOrder = null;
+            $segmen = null;
 
-            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+        } elseif ($divisi == 'Provisioning') {
+
+            $request->validate([
+                'nomor_wo' => 'required|unique:pekerjaans,nomor_wo',
+                'sc_order' => 'required',
+                'nama_pelanggan' => 'required',
+                'alamat_pelanggan' => 'required',
+                'jenis_pekerjaan' => 'required',
+                'jenis_pekerjaan_lainnya' => 'required_if:jenis_pekerjaan,Lainnya',
+                'deskripsi' => 'required',
+                'alpro' => 'required',
+                'segmen' => 'required',
+                'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
+
+            $nomorTiket = null;
+            $nomorWo = $request->nomor_wo;
+            $scOrder = $request->sc_order;
+            $segmen = $request->segmen;
+
+        } else {
+
+            return back()
+                ->withErrors([
+                    'divisi' => 'Divisi teknisi tidak valid.'
+                ])
+                ->withInput();
+        }
+
+        // =========================================================
+        // JENIS PEKERJAAN
+        // =========================================================
+
+        $jenisPekerjaan = $request->jenis_pekerjaan;
+
+        if ($jenisPekerjaan === 'Lainnya') {
+            $jenisPekerjaan = $request->jenis_pekerjaan_lainnya;
+        }
+
+        // =========================================================
+        // FOTO
+        // =========================================================
 
         $foto = null;
 
@@ -256,27 +298,24 @@ class TeknisiController extends Controller
             $foto = $request->file('foto')->store('pekerjaan', 'public');
         }
 
+        // =========================================================
+        // SIMPAN PEKERJAAN
+        // =========================================================
+
         Pekerjaan::create([
-            'user_id' => Auth::id(),
-
+            'user_id' => $user->id,
             'nomor_tiket' => $nomorTiket,
-
             'nomor_wo' => $nomorWo,
-
+            'sc_order' => $scOrder,
+            'alpro' => $request->alpro,
+            'segmen' => $segmen,
             'nama_pelanggan' => $request->nama_pelanggan,
-
             'alamat_pelanggan' => $request->alamat_pelanggan,
-
-            'jenis_pekerjaan' => $request->jenis_pekerjaan,
-
+            'jenis_pekerjaan' => $jenisPekerjaan,
             'deskripsi' => $request->deskripsi,
-
             'foto' => $foto,
-
             'tanggal' => now()->toDateString(),
-
             'status' => 'selesai',
-
             'jam_selesai' => now()->format('H:i:s'),
         ]);
 
@@ -302,12 +341,20 @@ class TeknisiController extends Controller
     }
     public function checkOut(Request $request)
     {
+        if (now()->format('H:i') < '17:00') {
+            return back()->with('error', 'Check Out baru dapat dilakukan mulai pukul 17.00.');
+        }
+
         $absensi = Absensi::where('user_id', Auth::id())
             ->whereDate('tanggal', today())
             ->first();
 
         if (!$absensi) {
             return back()->with('error', 'Anda belum Check In.');
+        }
+
+        if ($absensi->jam_keluar) {
+            return back()->with('error', 'Anda sudah Check Out.');
         }
 
         $absensi->update([

@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->string('nama');
             $table->string('nik')->unique();
-            $table->string('email')->unique();
+            $table->string('email')->nullable()->unique();
             $table->string('password');
 
             $table->enum('role', ['admin', 'teknisi'])->default('teknisi');

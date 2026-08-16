@@ -1,48 +1,176 @@
 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+
+    <button id="sidebarToggleTop"
+            class="btn btn-link d-md-none rounded-circle mr-3">
+
         <i class="fa fa-bars"></i>
+
     </button>
+
+
     <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+
         <div class="input-group">
-            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+
+            <input type="text"
+                   class="form-control bg-light border-0 small"
+                   placeholder="Search for..."
+                   aria-label="Search"
+                   aria-describedby="basic-addon2">
+
             <div class="input-group-append">
-                <button class="btn btn-primary" type="button">
+
+                <button class="btn btn-primary"
+                        type="button">
+
                     <i class="fas fa-search fa-sm"></i>
+
                 </button>
+
             </div>
+
         </div>
+
     </form>
+
+
     <ul class="navbar-nav ml-auto">
+
         <li class="nav-item dropdown no-arrow">
-            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ Auth::user()->nama ?? 'Admin' }}</span>
-                <img class="img-profile rounded-circle" src="{{ asset('admin/img/undraw_profile.svg') }}">
+
+            <a class="nav-link dropdown-toggle d-flex align-items-center"
+               href="#"
+               id="userDropdown"
+               role="button"
+               data-toggle="dropdown"
+               aria-haspopup="true"
+               aria-expanded="false">
+
+
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+
+                    {{ Auth::user()->nama ?? 'Admin' }}
+
+                </span>
+
+
+                {{-- FOTO PROFIL --}}
+
+                <div class="navbar-profile">
+
+                    @if(Auth::user()->foto)
+
+                        <img src="{{ asset('storage/' . Auth::user()->foto) }}"
+                             class="navbar-profile-image"
+                             alt="Foto Profil">
+
+                    @else
+
+                        <img src="{{ asset('admin/img/undraw_profile.svg') }}"
+                             class="navbar-profile-image"
+                             alt="Foto Profil">
+
+                    @endif
+
+                </div>
+
+
             </a>
-            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                <a class="dropdown-item" href="{{ route('teknisi.profil') }}">
+
+
+            {{-- DROPDOWN --}}
+
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                 aria-labelledby="userDropdown">
+
+
+                <a class="dropdown-item"
+                   href="{{ route('teknisi.profil') }}">
+
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+
                     Profil Saya
+
                 </a>
 
-                <a class="dropdown-item" href="{{ route('teknisi.profil.edit') }}">
+
+                <a class="dropdown-item"
+                   href="{{ route('teknisi.profil.edit') }}">
+
                     <i class="fas fa-user-edit fa-sm fa-fw mr-2 text-gray-400"></i>
+
                     Edit Profil
+
                 </a>
 
-                <a class="dropdown-item" href="{{ route('teknisi.password') }}">
+
+                <a class="dropdown-item"
+                   href="{{ route('teknisi.password') }}">
+
                     <i class="fas fa-key fa-sm fa-fw mr-2 text-gray-400"></i>
+
                     Ubah Password
+
                 </a>
+
 
                 <div class="dropdown-divider"></div>
 
-                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+
+                <a class="dropdown-item"
+                   href="#"
+                   data-toggle="modal"
+                   data-target="#logoutModal">
+
                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+
                     Logout
+
                 </a>
 
+
             </div>
+
         </li>
+
     </ul>
+
 </nav>
 
+
+<style>
+
+.navbar-profile {
+
+    width: 40px;
+
+    height: 40px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    background: #168fbd;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+
+.navbar-profile-image {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+    display: block;
+
+}
+
+</style>

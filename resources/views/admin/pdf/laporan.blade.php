@@ -5,59 +5,65 @@
 
     <meta charset="utf-8">
 
-    <title>Laporan Produktivitas Teknisi</title>
+    <title>Laporan {{ $divisi->nama_divisi }}</title>
 
     <style>
 
-        body{
-
+        body {
             font-family: DejaVu Sans;
-
-            font-size:12px;
-
+            font-size: 10px;
         }
 
-        h2{
-
-            text-align:center;
-
-            margin-bottom:5px;
-
+        h2 {
+            text-align: center;
+            margin-bottom: 5px;
         }
 
-        p{
-
-            text-align:center;
-
-            margin-top:0;
-
-            margin-bottom:20px;
-
+        h3 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 5px;
         }
 
-        table{
+        p {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
 
-            width:100%;
-
-            border-collapse:collapse;
-
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
         table th,
-        table td{
-
-            border:1px solid #000;
-
-            padding:6px;
-
-            font-size:11px;
-
+        table td {
+            border: 1px solid #000;
+            padding: 5px;
+            font-size: 9px;
         }
 
-        table th{
+        table th {
+            background: #f2f2f2;
+            text-align: center;
+        }
 
-            background:#f2f2f2;
+        table td {
+            vertical-align: middle;
+        }
 
+        .center {
+            text-align: center;
+        }
+
+        .selesai {
+            color: green;
+            font-weight: bold;
+        }
+
+        .pending {
+            color: orange;
+            font-weight: bold;
         }
 
     </style>
@@ -67,17 +73,22 @@
 <body>
 
 <h2>
-
     LAPORAN PRODUKTIVITAS TEKNISI
-
 </h2>
 
+<h3>
+    DIVISI {{ strtoupper($divisi->nama_divisi) }}
+</h3>
+
 <p>
+    Periode:
+    {{ $periodeLabel ?? '-' }}
+    <br>
 
-    Dicetak :
+    Dicetak:
     {{ now()->format('d-m-Y H:i') }}
-
 </p>
+
 
 <table>
 
@@ -91,87 +102,194 @@
 
             <th>Teknisi</th>
 
-            <th>Divisi</th>
 
-            <th>No Tiket</th>
+            {{-- ASSURANCE --}}
 
-            <th>Pelanggan</th>
+            @if($divisi->nama_divisi == 'Assurance')
 
-            <th>Jenis</th>
+                <th>Nomor Tiket</th>
 
-            <th>Durasi</th>
+                <th>ALPRO</th>
 
-            <th>Status</th>
+                <th>Pelanggan</th>
+
+                <th>Jenis Pekerjaan</th>
+
+                <th>Jam Selesai</th>
+
+                <th>Status</th>
+
+
+            {{-- PROVISIONING --}}
+
+            @elseif($divisi->nama_divisi == 'Provisioning')
+
+                <th>Nomor WO</th>
+
+                <th>SC Order</th>
+
+                <th>ALPRO</th>
+
+                <th>Segmen</th>
+
+                <th>Pelanggan</th>
+
+                <th>Jenis Pekerjaan</th>
+
+                <th>Jam Selesai</th>
+
+                <th>Status</th>
+
+            @endif
 
         </tr>
 
     </thead>
 
+
     <tbody>
 
-        @foreach($laporans as $laporan)
+        @forelse($laporans as $laporan)
 
-        <tr>
+            <tr>
 
-            <td>
+                <td class="center">
+                    {{ $loop->iteration }}
+                </td>
 
-                {{ $loop->iteration }}
 
-            </td>
+                <td class="center">
 
-            <td>
+                    {{ $laporan->tanggal
+                        ? \Carbon\Carbon::parse($laporan->tanggal)->format('d-m-Y')
+                        : '-' }}
 
-                {{ \Carbon\Carbon::parse($laporan->tanggal)->format('d-m-Y') }}
+                </td>
 
-            </td>
 
-            <td>
+                <td>
 
-                {{ $laporan->user->nama }}
+                    {{ optional($laporan->user)->nama ?? '-' }}
 
-            </td>
+                </td>
 
-            <td>
 
-                {{ optional($laporan->user->teknisi->divisi)->nama_divisi }}
+                {{-- ============================= --}}
+                {{-- ASSURANCE --}}
+                {{-- ============================= --}}
 
-            </td>
+                @if($divisi->nama_divisi == 'Assurance')
 
-            <td>
+                    <td>
+                        {{ $laporan->nomor_tiket ?? '-' }}
+                    </td>
 
-                {{ $laporan->nomor_tiket }}
+                    <td>
+                        {{ $laporan->alpro ?? '-' }}
+                    </td>
 
-            </td>
+                    <td>
+                        {{ $laporan->nama_pelanggan ?? '-' }}
+                    </td>
 
-            <td>
+                    <td>
+                        {{ $laporan->jenis_pekerjaan ?? '-' }}
+                    </td>
 
-                {{ $laporan->nama_pelanggan }}
+                    <td class="center">
+                        {{ $laporan->jam_selesai ?? '-' }}
+                    </td>
 
-            </td>
+                    <td class="center">
 
-            <td>
+                        @if($laporan->status == 'selesai')
 
-                {{ $laporan->jenis_pekerjaan }}
+                            <span class="selesai">
+                                Selesai
+                            </span>
 
-            </td>
+                        @else
 
-            <td>
+                            <span class="pending">
+                                Pending
+                            </span>
 
-                {{ $laporan->durasi }}
+                        @endif
 
-                Menit
+                    </td>
 
-            </td>
 
-            <td>
+                {{-- ============================= --}}
+                {{-- PROVISIONING --}}
+                {{-- ============================= --}}
 
-                {{ ucfirst($laporan->status) }}
+                @elseif($divisi->nama_divisi == 'Provisioning')
 
-            </td>
+                    <td>
+                        {{ $laporan->nomor_wo ?? '-' }}
+                    </td>
 
-        </tr>
+                    <td>
+                        {{ $laporan->sc_order ?? '-' }}
+                    </td>
 
-        @endforeach
+                    <td>
+                        {{ $laporan->alpro ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $laporan->segmen ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $laporan->nama_pelanggan ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $laporan->jenis_pekerjaan ?? '-' }}
+                    </td>
+
+                    <td class="center">
+                        {{ $laporan->jam_selesai ?? '-' }}
+                    </td>
+
+                    <td class="center">
+
+                        @if($laporan->status == 'selesai')
+
+                            <span class="selesai">
+                                Selesai
+                            </span>
+
+                        @else
+
+                            <span class="pending">
+                                Pending
+                            </span>
+
+                        @endif
+
+                    </td>
+
+                @endif
+
+            </tr>
+
+        @empty
+
+            <tr>
+
+                <td
+                    colspan="{{ $divisi->nama_divisi == 'Assurance' ? 9 : 11 }}"
+                    class="center">
+
+                    Tidak ada data laporan.
+
+                </td>
+
+            </tr>
+
+        @endforelse
 
     </tbody>
 

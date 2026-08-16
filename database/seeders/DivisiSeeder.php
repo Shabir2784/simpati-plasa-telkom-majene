@@ -13,10 +13,10 @@ class DivisiSeeder extends Seeder
      */
     public function run(): void
     {
-        Divisi::updateOrCreate(
+       Divisi::updateOrCreate(
             ['nama_divisi' => 'Provisioning'],
             [
-                'target_default' => 4,
+                'target_default' => 2,
                 'keterangan' => 'Menangani pemasangan layanan baru.'
             ]
         );

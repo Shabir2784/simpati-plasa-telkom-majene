@@ -17,7 +17,8 @@
 
     </div>
 
-    {{-- Informasi Teknisi --}}
+
+    {{-- INFORMASI TEKNISI --}}
 
     <div class="row">
 
@@ -41,6 +42,7 @@
 
         </div>
 
+
         <div class="col-md-4">
 
             <div class="card border-left-success shadow mb-4">
@@ -60,6 +62,7 @@
             </div>
 
         </div>
+
 
         <div class="col-md-4">
 
@@ -83,7 +86,8 @@
 
     </div>
 
-    {{-- Produktivitas --}}
+
+    {{-- PRODUKTIVITAS --}}
 
     <div class="card shadow mb-4">
 
@@ -99,15 +103,18 @@
 
             <div class="progress mb-3" style="height:25px;">
 
-                <div class="progress-bar bg-success"
-                     role="progressbar"
-                     style="width: {{ $persentase }}%;">
+                <div
+                    class="progress-bar bg-success"
+                    role="progressbar"
+                    style="width: {{ $persentase }}%;"
+                >
 
                     {{ number_format($persentase, 0) }}%
 
                 </div>
 
             </div>
+
 
             @if($realisasi >= $target)
 
@@ -133,7 +140,8 @@
 
     </div>
 
-    {{-- Daftar Pekerjaan --}}
+
+    {{-- DAFTAR PEKERJAAN --}}
 
     <div class="card shadow mb-4">
 
@@ -145,6 +153,7 @@
 
         </div>
 
+
         <div class="card-body">
 
             <div class="table-responsive">
@@ -153,109 +162,300 @@
 
                     <thead class="thead-dark">
 
-                        <tr>
+                        {{-- ========================= --}}
+                        {{-- ASSURANCE --}}
+                        {{-- ========================= --}}
 
-                            <th>No</th>
+                        @if($teknisi->divisi->nama_divisi == 'Assurance')
 
-                            @if($teknisi->divisi->nama_divisi == 'Assurance')
+                            <tr>
 
+                                <th>No</th>
+                                <th>Tanggal</th>
                                 <th>Nomor Tiket</th>
+                                <th>User</th>
+                                <th>Nama Pelanggan</th>
+                                <th>ALPRO</th>
+                                <th>Jenis Pekerjaan</th>
+                                <th>Foto</th>
+                                <th>Jam Selesai</th>
+                                <th>Status</th>
 
-                            @else
+                            </tr>
 
+
+                        {{-- ========================= --}}
+                        {{-- PROVISIONING --}}
+                        {{-- ========================= --}}
+
+                        @else
+
+                            <tr>
+
+                                <th>No</th>
+                                <th>Tanggal</th>
                                 <th>Nomor WO</th>
+                                <th>SC Order</th>
+                                <th>ALPRO</th>
+                                <th>Segmen</th>
+                                <th>Nama Pelanggan</th>
+                                <th>Jenis Pekerjaan</th>
+                                <th>Jam Selesai</th>
+                                <th>Status</th>
+                                <th>Foto</th>
 
-                            @endif
+                            </tr>
 
-                            <th>Nama Pelanggan</th>
-                            <th>Jenis Pekerjaan</th>
-                            <th>Jam Selesai</th>
-                            <th>Status</th>
-                            <th>Foto</th>
-
-                        </tr>
+                        @endif
 
                     </thead>
+
 
                     <tbody>
 
                         @forelse($pekerjaans as $pekerjaan)
 
-                        <tr>
 
-                            <td>
-                                {{ $loop->iteration }}
-                            </td>
+                            {{-- ========================= --}}
+                            {{-- ASSURANCE --}}
+                            {{-- ========================= --}}
 
-                            <td>
+                            @if($teknisi->divisi->nama_divisi == 'Assurance')
 
-                                @if($teknisi->divisi->nama_divisi == 'Assurance')
+                                <tr>
 
-                                    {{ $pekerjaan->nomor_tiket }}
+                                    <td>
+                                        {{ $loop->iteration }}
+                                    </td>
 
-                                @else
 
-                                    {{ $pekerjaan->nomor_wo }}
+                                    <td>
+                                        {{ $pekerjaan->tanggal
+                                            ? \Carbon\Carbon::parse($pekerjaan->tanggal)->format('d-m-Y')
+                                            : '-' }}
+                                    </td>
 
-                                @endif
 
-                            </td>
+                                    <td>
+                                        {{ $pekerjaan->nomor_tiket ?? '-' }}
+                                    </td>
 
-                            <td>
-                                {{ $pekerjaan->nama_pelanggan }}
-                            </td>
 
-                            <td>
-                                {{ $pekerjaan->jenis_pekerjaan }}
-                            </td>
+                                    <td>
+                                        {{ $teknisi->user->nama }}
+                                    </td>
 
-                            <td>
-                                {{ $pekerjaan->jam_selesai ?? '-' }}
-                            </td>
 
-                            <td>
+                                    <td>
+                                        {{ $pekerjaan->nama_pelanggan ?? '-' }}
+                                    </td>
 
-                                <span class="badge badge-success">
-                                    {{ ucfirst($pekerjaan->status) }}
-                                </span>
 
-                            </td>
+                                    <td>
+                                        {{ $pekerjaan->alpro ?? '-' }}
+                                    </td>
 
-                            <td class="text-center">
 
-                                @if($pekerjaan->foto)
+                                    <td>
+                                        {{ $pekerjaan->jenis_pekerjaan ?? '-' }}
+                                    </td>
 
-                                    <a href="{{ asset('storage/'.$pekerjaan->foto) }}"
-                                       target="_blank"
-                                       class="btn btn-info btn-sm">
 
-                                        <i class="fas fa-image"></i>
+                                    {{-- FOTO ASSURANCE --}}
 
-                                    </a>
+                                    <td class="text-center">
 
-                                @else
+                                        @if($pekerjaan->foto)
 
-                                    <span class="text-muted">
-                                        Tidak ada
-                                    </span>
+                                            <a
+                                                href="{{ asset('storage/' . $pekerjaan->foto) }}"
+                                                target="_blank"
+                                                class="btn btn-info btn-sm"
+                                                title="Lihat Foto"
+                                            >
 
-                                @endif
+                                                <i class="fas fa-image"></i>
+                                                Lihat Foto
 
-                            </td>
+                                            </a>
 
-                        </tr>
+                                        @else
+
+                                            <span class="text-muted">
+                                                Tidak ada
+                                            </span>
+
+                                        @endif
+
+                                    </td>
+
+
+                                    {{-- JAM SELESAI --}}
+
+                                    <td>
+                                        {{ $pekerjaan->jam_selesai ?? '-' }}
+                                    </td>
+
+
+                                    {{-- STATUS --}}
+
+                                    <td>
+
+                                        @if($pekerjaan->status == 'selesai')
+
+                                            <span class="badge badge-success">
+                                                Selesai
+                                            </span>
+
+                                        @else
+
+                                            <span class="badge badge-warning">
+                                                Pending
+                                            </span>
+
+                                        @endif
+
+                                    </td>
+
+                                </tr>
+
+
+                            {{-- ========================= --}}
+                            {{-- PROVISIONING --}}
+                            {{-- ========================= --}}
+
+                            @else
+
+                                <tr>
+
+                                    <td>
+                                        {{ $loop->iteration }}
+                                    </td>
+
+
+                                    <td>
+                                        {{ $pekerjaan->tanggal
+                                            ? \Carbon\Carbon::parse($pekerjaan->tanggal)->format('d-m-Y')
+                                            : '-' }}
+                                    </td>
+
+
+                                    <td>
+                                        {{ $pekerjaan->nomor_wo ?? '-' }}
+                                    </td>
+
+
+                                    <td>
+                                        {{ $pekerjaan->sc_order ?? '-' }}
+                                    </td>
+
+
+                                    <td>
+                                        {{ $pekerjaan->alpro ?? '-' }}
+                                    </td>
+
+
+                                    <td>
+                                        {{ $pekerjaan->segmen ?? '-' }}
+                                    </td>
+
+
+                                    <td>
+                                        {{ $pekerjaan->nama_pelanggan ?? '-' }}
+                                    </td>
+
+
+                                    <td>
+                                        {{ $pekerjaan->jenis_pekerjaan ?? '-' }}
+                                    </td>
+
+
+                                    <td>
+                                        {{ $pekerjaan->jam_selesai ?? '-' }}
+                                    </td>
+
+
+                                    <td>
+
+                                        @if($pekerjaan->status == 'selesai')
+
+                                            <span class="badge badge-success">
+                                                Selesai
+                                            </span>
+
+                                        @else
+
+                                            <span class="badge badge-warning">
+                                                Pending
+                                            </span>
+
+                                        @endif
+
+                                    </td>
+
+
+                                    {{-- FOTO PROVISIONING --}}
+
+                                    <td class="text-center">
+
+                                        @if($pekerjaan->foto)
+
+                                            <a
+                                                href="{{ asset('storage/' . $pekerjaan->foto) }}"
+                                                target="_blank"
+                                                class="btn btn-info btn-sm"
+                                                title="Lihat Foto"
+                                            >
+
+                                                <i class="fas fa-image"></i>
+                                                Lihat Foto
+
+                                            </a>
+
+                                        @else
+
+                                            <span class="text-muted">
+                                                Tidak ada
+                                            </span>
+
+                                        @endif
+
+                                    </td>
+
+                                </tr>
+
+                            @endif
+
 
                         @empty
 
-                        <tr>
+                            <tr>
 
-                            <td colspan="7" class="text-center text-muted py-4">
+                                @if($teknisi->divisi->nama_divisi == 'Assurance')
 
-                                Belum ada pekerjaan hari ini.
+                                    <td
+                                        colspan="10"
+                                        class="text-center text-muted py-4"
+                                    >
 
-                            </td>
+                                        Belum ada pekerjaan hari ini.
 
-                        </tr>
+                                    </td>
+
+                                @else
+
+                                    <td
+                                        colspan="11"
+                                        class="text-center text-muted py-4"
+                                    >
+
+                                        Belum ada pekerjaan hari ini.
+
+                                    </td>
+
+                                @endif
+
+                            </tr>
 
                         @endforelse
 

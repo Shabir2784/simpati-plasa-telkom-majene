@@ -20,7 +20,7 @@ class TargetProduktivitasSeeder extends Seeder
 
         TargetProduktivitas::create([
             'divisi_id' => $provisioning->id,
-            'target' => 5
+            'target' => 2
         ]);
 
         TargetProduktivitas::create([

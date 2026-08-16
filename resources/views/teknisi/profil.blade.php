@@ -17,20 +17,56 @@
 
                 <div class="card-body text-center">
 
-                    <img
-                        src="https://ui-avatars.com/api/?name={{ urlencode($teknisi->user->nama) }}&background=0D8ABC&color=fff&size=220"
-                        class="rounded-circle img-fluid mb-3"
-                        style="max-width:180px;">
+                    {{-- FOTO PROFIL --}}
+                    <div style="
+                        width:180px;
+                        height:180px;
+                        margin:0 auto 20px;
+                        border-radius:50%;
+                        overflow:hidden;
+                        background:#168fbd;
+                    ">
+
+                        @if($teknisi->user->foto)
+
+                            <img
+                                src="{{ asset('storage/' . $teknisi->user->foto) }}"
+                                alt="Foto Profil"
+                                style="
+                                    width:100%;
+                                    height:100%;
+                                    object-fit:cover;
+                                "
+                            >
+
+                        @else
+
+                            <img
+                                src="{{ asset('admin/img/undraw_profile.svg') }}"
+                                alt="Foto Profil"
+                                style="
+                                    width:100%;
+                                    height:100%;
+                                    object-fit:cover;
+                                "
+                            >
+
+                        @endif
+
+                    </div>
+
 
                     <h4 class="font-weight-bold">
                         {{ $teknisi->user->nama }}
                     </h4>
 
+
                     <p class="text-muted mb-2">
                         {{ $teknisi->divisi->nama_divisi }}
                     </p>
 
-                    @if($teknisi->status=="Aktif")
+
+                    @if($teknisi->status == "Aktif")
 
                         <span class="badge badge-success px-3 py-2">
                             Aktif
@@ -50,6 +86,7 @@
 
         </div>
 
+
         <!-- DATA -->
         <div class="col-xl-8 col-lg-7 col-md-12">
 
@@ -57,9 +94,12 @@
 
                 <div class="card-header bg-primary text-white">
 
-                    <strong>Informasi Teknisi</strong>
+                    <strong>
+                        Informasi Teknisi
+                    </strong>
 
                 </div>
+
 
                 <div class="card-body">
 
@@ -68,41 +108,92 @@
                         <table class="table table-bordered">
 
                             <tr>
-                                <th width="30%">Nama</th>
-                                <td>{{ $teknisi->user->nama }}</td>
+
+                                <th width="30%">
+                                    Nama
+                                </th>
+
+                                <td>
+                                    {{ $teknisi->user->nama }}
+                                </td>
+
                             </tr>
 
-                            <tr>
-                                <th>Email</th>
-                                <td>{{ $teknisi->user->email }}</td>
-                            </tr>
+
+                            {{-- <tr>
+
+                                <th>
+                                    Email
+                                </th>
+
+                                <td>
+                                    {{ $teknisi->user->email }}
+                                </td>
+
+                            </tr> --}}
+
 
                             <tr>
-                                <th>NIK</th>
-                                <td>{{ $teknisi->nik }}</td>
+
+                                <th>
+                                    NIK
+                                </th>
+
+                                <td>
+                                    {{ $teknisi->nik }}
+                                </td>
+
                             </tr>
 
-                            <tr>
-                                <th>Divisi</th>
-                                <td>{{ $teknisi->divisi->nama_divisi }}</td>
-                            </tr>
 
                             <tr>
-                                <th>No HP</th>
-                                <td>{{ $teknisi->no_hp }}</td>
+
+                                <th>
+                                    Divisi
+                                </th>
+
+                                <td>
+                                    {{ $teknisi->divisi->nama_divisi }}
+                                </td>
+
                             </tr>
 
-                            <tr>
-                                <th>Alamat</th>
-                                <td>{{ $teknisi->alamat }}</td>
-                            </tr>
 
                             <tr>
-                                <th>Status</th>
+
+                                <th>
+                                    No HP
+                                </th>
+
+                                <td>
+                                    {{ $teknisi->no_hp }}
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Alamat
+                                </th>
+
+                                <td>
+                                    {{ $teknisi->alamat }}
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Status
+                                </th>
 
                                 <td>
 
-                                    @if($teknisi->status=="Aktif")
+                                    @if($teknisi->status == "Aktif")
 
                                         <span class="badge badge-success">
                                             Aktif

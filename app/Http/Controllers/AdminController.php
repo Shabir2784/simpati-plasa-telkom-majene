@@ -23,7 +23,7 @@ use App\Exports\LaporanExport;
 
 class AdminController extends Controller
 {
-
+   
     public function dashboard()
     {
         $today = now()->toDateString();
@@ -61,19 +61,7 @@ class AdminController extends Controller
             }
         }
 
-        // Grafik Produktivitas 7 Hari
-        $grafikLabel = [];
-        $grafikData = [];
-
-        for ($i = 6; $i >= 0; $i--) {
-
-            $tanggal = now()->subDays($i);
-
-            $grafikLabel[] = $tanggal->translatedFormat('D');
-
-            $grafikData[] = Pekerjaan::whereDate('tanggal', $tanggal)
-                ->count();
-        }
+        // Monitoring Teknisi
         $monitoring = Teknisi::with([
             'user',
             'divisi',
@@ -90,38 +78,44 @@ class AdminController extends Controller
             $item->target = TargetProduktivitas::where('divisi_id', $item->divisi_id)
                 ->value('target') ?? 4;
 
-            $item->persentase = min(
-                ($item->jumlahPekerjaan / $item->target) * 100,
-                100
-            );
+            $item->persentase = $item->target > 0
+                ? min(($item->jumlahPekerjaan / $item->target) * 100, 100)
+                : 0;
         }
+
+        // Monitoring berdasarkan divisi
+        $monitoringDivisi = $monitoring->groupBy(function ($item) {
+            return $item->divisi->nama_divisi;
+        });
+
+        // Top Teknisi
         $topTeknisi = Teknisi::with(['user', 'divisi'])
-        ->get()
-        ->map(function ($teknisi) use ($today) {
+            ->get()
+            ->map(function ($teknisi) use ($today) {
 
-            $teknisi->jumlah = Pekerjaan::where('user_id', $teknisi->user_id)
-                ->whereDate('tanggal', $today)
-                ->count();
+                $teknisi->jumlah = Pekerjaan::where('user_id', $teknisi->user_id)
+                    ->whereDate('tanggal', $today)
+                    ->count();
 
-            return $teknisi;
+                return $teknisi;
+            })
+            ->sortByDesc('jumlah')
+            ->take(5);
 
-        })
-        ->sortByDesc('jumlah')
-        ->take(5);
-
+        // Progress Divisi
         $progressDivisi = Divisi::with('teknisis')->get()->map(function ($divisi) use ($today) {
 
-    $target = TargetProduktivitas::where('divisi_id', $divisi->id)
-        ->value('target') ?? 4;
+            $target = TargetProduktivitas::where('divisi_id', $divisi->id)
+                ->value('target') ?? 4;
 
             $jumlahTeknisi = $divisi->teknisis->count();
 
             $targetTotal = $target * $jumlahTeknisi;
 
             $totalPekerjaan = Pekerjaan::whereIn(
-                    'user_id',
-                    $divisi->teknisis->pluck('user_id')
-                )
+                'user_id',
+                $divisi->teknisis->pluck('user_id')
+            )
                 ->whereDate('tanggal', $today)
                 ->count();
 
@@ -135,20 +129,20 @@ class AdminController extends Controller
                 'pekerjaan' => $totalPekerjaan,
                 'persentase' => round($persentase)
             ];
-
         });
 
+        // Lokasi Teknisi
         $lokasiTeknisi = LokasiTeknisi::with([
             'user',
             'user.absensiTerakhir',
             'user.divisi'
         ])
-        ->whereIn('id', function ($query) {
-            $query->selectRaw('MAX(id)')
-                ->from('lokasi_teknisis')
-                ->groupBy('user_id');
-        })
-        ->get();
+            ->whereIn('id', function ($query) {
+                $query->selectRaw('MAX(id)')
+                    ->from('lokasi_teknisis')
+                    ->groupBy('user_id');
+            })
+            ->get();
 
         return view('admin.dashboardAdmin', compact(
             'totalTeknisi',
@@ -156,9 +150,8 @@ class AdminController extends Controller
             'offline',
             'totalPekerjaan',
             'targetTercapai',
-            'grafikLabel',
-            'grafikData',
             'monitoring',
+            'monitoringDivisi',
             'topTeknisi',
             'progressDivisi',
             'lokasiTeknisi'
@@ -176,25 +169,34 @@ class AdminController extends Controller
 
     public function storeTeknisi(Request $request)
     {
+        $request->validate([
+            'nama' => 'required',
+            'password' => 'required|min:6',
+            'nik' => 'required|unique:users,nik|unique:teknisis,nik',
+            'divisi_id' => 'required',
+            'no_hp' => 'required',
+            'alamat' => 'nullable|string',
+        ]);
+
         $user = User::create([
             'nama' => $request->nama,
             'nik' => $request->nik,
-            'email' => $request->email,
+            'email' => null,
             'password' => Hash::make($request->password),
             'role' => 'teknisi',
             'divisi_id' => $request->divisi_id,
             'no_hp' => $request->no_hp,
         ]);
 
-    $teknisi = Teknisi::create([
-        'user_id' => $user->id,
-        'divisi_id' => $request->divisi_id,
-        'nik' => $request->nik,
-        'no_hp' => $request->no_hp,
-        'alamat' => $request->alamat,
-        'status' => 'Aktif',
-    ]);
-        
+        $teknisi = Teknisi::create([
+            'user_id' => $user->id,
+            'divisi_id' => $request->divisi_id,
+            'nik' => $request->nik,
+            'no_hp' => $request->no_hp,
+            'alamat' => $request->alamat,
+            'status' => 'Aktif',
+        ]);
+
         return redirect()->route('admin.teknisi')
             ->with('success', 'Data teknisi berhasil ditambahkan.');
     }
@@ -212,19 +214,19 @@ class AdminController extends Controller
     }
     public function updateTeknisi(Request $request, $id)
     {
+        $teknisi = Teknisi::findOrFail($id);
+
         $request->validate([
-            'nik' => 'required|unique:teknisis,nik,' . $id,
             'nama' => 'required',
-            'email' => 'required|email',
+            'nik' => 'required|unique:teknisis,nik,' . $id,
             'divisi_id' => 'required',
             'no_hp' => 'required',
+            'alamat' => 'nullable|string',
         ]);
-
-        $teknisi = Teknisi::findOrFail($id);
 
         $teknisi->user->update([
             'nama' => $request->nama,
-            'email' => $request->email,
+            'nik' => $request->nik,
             'divisi_id' => $request->divisi_id,
             'no_hp' => $request->no_hp,
         ]);
@@ -236,7 +238,8 @@ class AdminController extends Controller
             'alamat' => $request->alamat,
         ]);
 
-        return redirect()->route('admin.teknisi')
+        return redirect()
+            ->route('admin.teknisi')
             ->with('success', 'Data teknisi berhasil diperbarui.');
     }
     public function destroyTeknisi($id)
@@ -471,20 +474,18 @@ class AdminController extends Controller
         return back()->with('success', 'Password teknisi berhasil direset.');
     }
 
-    public function pekerjaan()
-    {
-        return view('admin.pekerjaan');
-    }
-
-
-    public function monitoring()
+   public function monitoringAssurance()
     {
         $teknisis = Teknisi::with([
             'user',
             'divisi',
             'user.absensiTerakhir',
             'user.lokasiTerakhir'
-        ])->get();
+        ])
+        ->whereHas('divisi', function ($query) {
+            $query->where('nama_divisi', 'Assurance');
+        })
+        ->get();
 
         $totalOnline = 0;
         $totalOffline = 0;
@@ -497,35 +498,93 @@ class AdminController extends Controller
                 ->whereDate('tanggal', today())
                 ->count();
 
-            $target = TargetProduktivitas::where('divisi_id', $teknisi->divisi_id)->first();
+            $target = TargetProduktivitas::where('divisi_id', $teknisi->divisi_id)
+                ->value('target') ?? 4;
 
-            $targetHarian = $target ? $target->target : 4;
-
-            $persen = $targetHarian > 0
-                ? min(($jumlah / $targetHarian) * 100, 100)
+            $persen = $target > 0
+                ? min(($jumlah / $target) * 100, 100)
                 : 0;
 
             $teknisi->jumlah = $jumlah;
-            $teknisi->target = $targetHarian;
+            $teknisi->target = $target;
             $teknisi->persen = $persen;
 
             $totalPekerjaan += $jumlah;
 
-            if ($jumlah >= $targetHarian) {
+            if ($jumlah >= $target) {
                 $targetTercapai++;
             }
 
-            if (
-                optional($teknisi->user->absensiTerakhir)->status == 'aktif'
-                && !$teknisi->user->absensiTerakhir->jam_keluar
-            ) {
+            $absensi = $teknisi->user->absensiTerakhir;
+
+            if ($absensi && $absensi->status == 'aktif' && !$absensi->jam_keluar) {
                 $totalOnline++;
             } else {
                 $totalOffline++;
             }
         }
 
-        return view('admin.monitoring', compact(
+        return view('admin.monitoringAssurance', compact(
+            'teknisis',
+            'totalOnline',
+            'totalOffline',
+            'targetTercapai',
+            'totalPekerjaan'
+        ));
+    }
+
+
+    public function monitoringProvisioning()
+    {
+        $teknisis = Teknisi::with([
+            'user',
+            'divisi',
+            'user.absensiTerakhir',
+            'user.lokasiTerakhir'
+        ])
+        ->whereHas('divisi', function ($query) {
+            $query->where('nama_divisi', 'Provisioning');
+        })
+        ->get();
+
+        $totalOnline = 0;
+        $totalOffline = 0;
+        $targetTercapai = 0;
+        $totalPekerjaan = 0;
+
+        foreach ($teknisis as $teknisi) {
+
+            $jumlah = Pekerjaan::where('user_id', $teknisi->user_id)
+                ->whereDate('tanggal', today())
+                ->count();
+
+            $target = TargetProduktivitas::where('divisi_id', $teknisi->divisi_id)
+                ->value('target') ?? 4;
+
+            $persen = $target > 0
+                ? min(($jumlah / $target) * 100, 100)
+                : 0;
+
+            $teknisi->jumlah = $jumlah;
+            $teknisi->target = $target;
+            $teknisi->persen = $persen;
+
+            $totalPekerjaan += $jumlah;
+
+            if ($jumlah >= $target) {
+                $targetTercapai++;
+            }
+
+            $absensi = $teknisi->user->absensiTerakhir;
+
+            if ($absensi && $absensi->status == 'aktif' && !$absensi->jam_keluar) {
+                $totalOnline++;
+            } else {
+                $totalOffline++;
+            }
+        }
+
+        return view('admin.monitoringProvisioning', compact(
             'teknisis',
             'totalOnline',
             'totalOffline',
@@ -560,32 +619,71 @@ class AdminController extends Controller
         ));
     }
     
-    public function absensi()
+    public function absensiAssurance()
+    {
+    $teknisis = Teknisi::with([
+        'user',
+        'divisi',
+        'absensiHariIni'
+    ])
+    ->whereHas('divisi', function ($query) {
+        $query->where('nama_divisi', 'Assurance');
+    })
+    ->get();
+
+    $totalHadir = $teknisis->filter(function ($teknisi) {
+        return $teknisi->absensiHariIni;
+    })->count();
+
+    $sudahPulang = $teknisis->filter(function ($teknisi) {
+        return $teknisi->absensiHariIni &&
+               $teknisi->absensiHariIni->jam_keluar;
+    })->count();
+
+    $belumPulang = $teknisis->filter(function ($teknisi) {
+        return $teknisi->absensiHariIni &&
+               !$teknisi->absensiHariIni->jam_keluar;
+    })->count();
+
+    $terlambat = $teknisis->filter(function ($teknisi) {
+        return $teknisi->absensiHariIni &&
+               $teknisi->absensiHariIni->status == 'terlambat';
+    })->count();
+
+    return view('admin.absensiAssurance', compact(
+        'teknisis',
+        'totalHadir',
+        'sudahPulang',
+        'belumPulang',
+        'terlambat'
+    ));
+}
+
+
+    public function absensiProvisioning()
     {
         $teknisis = Teknisi::with([
             'user',
             'divisi',
             'absensiHariIni'
-        ])->get();
-
-        $assurance = $teknisis->filter(function ($teknisi) {
-            return $teknisi->divisi->nama_divisi == 'Assurance';
-        });
-
-        $provisioning = $teknisis->filter(function ($teknisi) {
-            return $teknisi->divisi->nama_divisi == 'Provisioning';
-        });
+        ])
+        ->whereHas('divisi', function ($query) {
+            $query->where('nama_divisi', 'Provisioning');
+        })
+        ->get();
 
         $totalHadir = $teknisis->filter(function ($teknisi) {
             return $teknisi->absensiHariIni;
         })->count();
 
         $sudahPulang = $teknisis->filter(function ($teknisi) {
-            return $teknisi->absensiHariIni && $teknisi->absensiHariIni->jam_keluar;
+            return $teknisi->absensiHariIni &&
+                $teknisi->absensiHariIni->jam_keluar;
         })->count();
 
         $belumPulang = $teknisis->filter(function ($teknisi) {
-            return $teknisi->absensiHariIni && !$teknisi->absensiHariIni->jam_keluar;
+            return $teknisi->absensiHariIni &&
+                !$teknisi->absensiHariIni->jam_keluar;
         })->count();
 
         $terlambat = $teknisis->filter(function ($teknisi) {
@@ -593,10 +691,8 @@ class AdminController extends Controller
                 $teknisi->absensiHariIni->status == 'terlambat';
         })->count();
 
-        return view('admin.absensi', compact(
+        return view('admin.absensiProvisioning', compact(
             'teknisis',
-            'assurance',
-            'provisioning',
             'totalHadir',
             'sudahPulang',
             'belumPulang',
@@ -788,6 +884,377 @@ public function exportAbsensiExcelProvisioning()
             'divisis'
         ));
     }
+    public function laporanDivisi($namaDivisi)
+    {
+        $divisi = Divisi::where('nama_divisi', $namaDivisi)->firstOrFail();
+
+        $periode = request('periode', 'harian');
+
+        $query = Pekerjaan::with([
+            'user',
+            'user.teknisi.divisi'
+        ])->whereHas('user.teknisi', function ($q) use ($divisi) {
+            $q->where('divisi_id', $divisi->id);
+        });
+
+        if ($periode == 'harian') {
+
+            $query->whereDate('tanggal', today());
+
+        } elseif ($periode == 'mingguan') {
+
+            $query->whereBetween('tanggal', [
+                now()->startOfWeek()->toDateString(),
+                now()->endOfWeek()->toDateString()
+            ]);
+
+        } elseif ($periode == 'bulanan') {
+
+            $query->whereMonth('tanggal', now()->month)
+                ->whereYear('tanggal', now()->year);
+        }
+
+        if (request('tanggal_awal')) {
+            $query->whereDate('tanggal', '>=', request('tanggal_awal'));
+        }
+
+        if (request('tanggal_akhir')) {
+            $query->whereDate('tanggal', '<=', request('tanggal_akhir'));
+        }
+
+        if (request('status')) {
+            $query->where('status', request('status'));
+        }
+
+        $laporans = $query
+            ->latest('tanggal')
+            ->get();
+
+        $total = $laporans->count();
+
+        $selesai = $laporans
+            ->where('status', 'selesai')
+            ->count();
+
+        $pending = $laporans
+            ->where('status', 'pending')
+            ->count();
+
+        $teknisi = Teknisi::where('divisi_id', $divisi->id)->count();
+
+        return view('admin.laporanDivisi', compact(
+            'divisi',
+            'laporans',
+            'periode',
+            'total',
+            'selesai',
+            'pending',
+            'teknisi'
+        ));
+    }
+    public function laporanAssurance(Request $request)
+    {
+        $divisi = Divisi::where('nama_divisi', 'Assurance')->firstOrFail();
+
+        $periode = $request->periode ?? 'harian';
+
+        $query = Pekerjaan::with([
+            'user',
+            'user.teknisi.divisi'
+        ])->whereHas('user.teknisi', function ($q) use ($divisi) {
+            $q->where('divisi_id', $divisi->id);
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | PERIODE
+        |--------------------------------------------------------------------------
+        */
+
+        if ($periode === 'harian') {
+
+            $query->whereDate('tanggal', today());
+
+        } elseif ($periode === 'mingguan') {
+
+            $query->whereBetween('tanggal', [
+                now()->startOfWeek()->toDateString(),
+                now()->endOfWeek()->toDateString()
+            ]);
+
+        } elseif ($periode === 'bulanan') {
+
+            $query->whereBetween('tanggal', [
+                now()->startOfMonth()->toDateString(),
+                now()->endOfMonth()->toDateString()
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER TANGGAL MANUAL
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->tanggal_awal) {
+            $query->whereDate('tanggal', '>=', $request->tanggal_awal);
+        }
+
+        if ($request->tanggal_akhir) {
+            $query->whereDate('tanggal', '<=', $request->tanggal_akhir);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $laporans = $query
+            ->latest('tanggal')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | RINGKASAN
+        |--------------------------------------------------------------------------
+        */
+
+        $total = $laporans->count();
+
+        $selesai = $laporans
+            ->where('status', 'selesai')
+            ->count();
+
+        $pending = $laporans
+            ->where('status', 'pending')
+            ->count();
+
+        $teknisi = $divisi->teknisis()->count();
+
+        return view('admin.laporanDivisi', compact(
+            'divisi',
+            'periode',
+            'laporans',
+            'total',
+            'selesai',
+            'pending',
+            'teknisi'
+        ));
+    }
+
+
+    public function laporanProvisioning(Request $request)
+    {
+        $divisi = Divisi::where('nama_divisi', 'Provisioning')->firstOrFail();
+
+        $periode = $request->periode ?? 'harian';
+
+        $query = Pekerjaan::with([
+            'user',
+            'user.teknisi.divisi'
+        ])->whereHas('user.teknisi', function ($q) use ($divisi) {
+            $q->where('divisi_id', $divisi->id);
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | PERIODE
+        |--------------------------------------------------------------------------
+        */
+
+        if ($periode === 'harian') {
+
+            $query->whereDate('tanggal', today());
+
+        } elseif ($periode === 'mingguan') {
+
+            $query->whereBetween('tanggal', [
+                now()->startOfWeek()->toDateString(),
+                now()->endOfWeek()->toDateString()
+            ]);
+
+        } elseif ($periode === 'bulanan') {
+
+            $query->whereBetween('tanggal', [
+                now()->startOfMonth()->toDateString(),
+                now()->endOfMonth()->toDateString()
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER TANGGAL MANUAL
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->tanggal_awal) {
+            $query->whereDate('tanggal', '>=', $request->tanggal_awal);
+        }
+
+        if ($request->tanggal_akhir) {
+            $query->whereDate('tanggal', '<=', $request->tanggal_akhir);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $laporans = $query
+            ->latest('tanggal')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | RINGKASAN
+        |--------------------------------------------------------------------------
+        */
+
+        $total = $laporans->count();
+
+        $selesai = $laporans
+            ->where('status', 'selesai')
+            ->count();
+
+        $pending = $laporans
+            ->where('status', 'pending')
+            ->count();
+
+        $teknisi = $divisi->teknisis()->count();
+
+        return view('admin.laporanDivisi', compact(
+            'divisi',
+            'periode',
+            'laporans',
+            'total',
+            'selesai',
+            'pending',
+            'teknisi'
+        ));
+    }
+    private function laporanPerDivisi(Request $request, $namaDivisi)
+    {
+        $divisi = Divisi::where('nama_divisi', $namaDivisi)->firstOrFail();
+
+        $periode = $request->periode ?? 'harian';
+
+        $query = Pekerjaan::with([
+            'user',
+            'user.teknisi.divisi'
+        ])->whereHas('user.teknisi', function ($q) use ($divisi) {
+            $q->where('divisi_id', $divisi->id);
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | PERIODE
+        |--------------------------------------------------------------------------
+        */
+
+        if ($periode == 'harian') {
+
+            $query->whereDate('tanggal', today());
+
+        } elseif ($periode == 'mingguan') {
+
+            $query->whereBetween('tanggal', [
+                now()->startOfWeek()->toDateString(),
+                now()->endOfWeek()->toDateString()
+            ]);
+
+        } elseif ($periode == 'bulanan') {
+
+            $query->whereMonth('tanggal', now()->month)
+                ->whereYear('tanggal', now()->year);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER TANGGAL CUSTOM
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->tanggal_awal) {
+
+            $query->whereDate(
+                'tanggal',
+                '>=',
+                $request->tanggal_awal
+            );
+        }
+
+        if ($request->tanggal_akhir) {
+
+            $query->whereDate(
+                'tanggal',
+                '<=',
+                $request->tanggal_akhir
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->status) {
+
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
+        $laporans = $query
+            ->latest('tanggal')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | RINGKASAN
+        |--------------------------------------------------------------------------
+        */
+
+        $total = $laporans->count();
+
+        $selesai = $laporans
+            ->where('status', 'selesai')
+            ->count();
+
+        $pending = $laporans
+            ->where('status', 'pending')
+            ->count();
+
+        $teknisi = Teknisi::where(
+            'divisi_id',
+            $divisi->id
+        )->count();
+
+        return view(
+            'admin.laporanDivisi',
+            compact(
+                'divisi',
+                'laporans',
+                'periode',
+                'total',
+                'selesai',
+                'pending',
+                'teknisi'
+            )
+        );
+    }
+
     public function detailLaporan($id)
     {
         $pekerjaan = Pekerjaan::with([
@@ -798,27 +1265,100 @@ public function exportAbsensiExcelProvisioning()
         return view('admin.detailLaporan', compact('pekerjaan'));
     }
     
-    public function exportLaporanPdf()
+    public function exportLaporanPdf(Request $request)
     {
-        $laporans = Pekerjaan::with([
+        $divisi = Divisi::findOrFail($request->divisi);
+
+        $periode = $request->periode ?? 'harian';
+
+        $query = Pekerjaan::with([
             'user',
             'user.teknisi.divisi'
-        ])
-        ->latest('tanggal')
-        ->get();
+        ])->whereHas('user.teknisi', function ($q) use ($divisi) {
+            $q->where('divisi_id', $divisi->id);
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | PERIODE
+        |--------------------------------------------------------------------------
+        */
+
+        if ($periode === 'harian') {
+
+            $query->whereDate('tanggal', today());
+
+        } elseif ($periode === 'mingguan') {
+
+            $query->whereBetween('tanggal', [
+                now()->startOfWeek()->toDateString(),
+                now()->endOfWeek()->toDateString()
+            ]);
+
+        } elseif ($periode === 'bulanan') {
+
+            $query->whereBetween('tanggal', [
+                now()->startOfMonth()->toDateString(),
+                now()->endOfMonth()->toDateString()
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER TANGGAL
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->tanggal_awal) {
+            $query->whereDate('tanggal', '>=', $request->tanggal_awal);
+        }
+
+        if ($request->tanggal_akhir) {
+            $query->whereDate('tanggal', '<=', $request->tanggal_akhir);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $laporans = $query
+            ->latest('tanggal')
+            ->get();
 
         $pdf = Pdf::loadView(
             'admin.pdf.laporan',
-            compact('laporans')
+            compact(
+                'laporans',
+                'divisi',
+                'periode'
+            )
         );
 
-        return $pdf->download('Laporan_Produktivitas.pdf');
+        $namaFile = 'Laporan_' . $divisi->nama_divisi . '_' . $periode . '.pdf';
+
+        return $pdf->download($namaFile);
     }
-    public function exportLaporanExcel()
+    public function exportLaporanExcel(Request $request)
     {
+        $divisi = Divisi::findOrFail($request->divisi);
+
+        $periode = $request->periode ?? 'harian';
+
         return Excel::download(
-            new LaporanExport,
-            'Laporan_Produktivitas.xlsx'
+            new LaporanExport(
+                $divisi->id,
+                $periode,
+                $request->tanggal_awal,
+                $request->tanggal_akhir,
+                $request->status
+            ),
+            'Laporan_' . $divisi->nama_divisi . '_' . $periode . '.xlsx'
         );
     }
     
